@@ -1,19 +1,6 @@
-  import { auth } from "./firebase.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-    }
-  });
-
-import { auth } from "./firebase.js";
-  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.href = "login.html";
-  });
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -21,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const overlay = document.getElementById("overlay");
   const profileDropdown = document.getElementById("profileDropdown");
 
-  // menu
+  // Menu functions
   window.openMenu = function () {
     sideMenu.style.left = "0";
     overlay.style.display = "block";
@@ -44,53 +31,73 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // login
-  let user = localStorage.getItem("loggedInUser");
-
-  if (user) {
-    document.getElementById("userNameDisplay").innerText = formatUserName(user);
-
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("registerBtn").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "block";
-  }
-
-  // hide user display if no user
-  if (!user) {
-    const userDisplay = document.getElementById("userDisplay");
-    if (userDisplay) userDisplay.style.display = "none";
-  }
-
-  // student count + average
-  let students = JSON.parse(localStorage.getItem("students")) || [];
-
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
   const studentCount = document.getElementById("studentCount");
-  if (studentCount) studentCount.innerText = students.length;
+  const averageGrade = document.getElementById("averageGrade");
 
-  if (students.length > 0) {
-    let total = 0;
-    let graded = 0;
+  // Firebase: check if user is logged in
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const email = user.email;
+      userNameDisplay.innerText = formatUserName(email);
 
-    students.forEach(s => {
-      if (typeof s.overall === "number") {   // FIXED (use overall not grade)
-        total += s.overall;
-        graded++;
+      if (loginBtn) loginBtn.style.display = "none";
+      if (registerBtn) registerBtn.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "block";
+
+      // Fetch students from Firebase Realtime Database
+      const dbRef = ref(db, "students");
+      try {
+        const snapshot = await get(child(dbRef, ""));
+        let students = [];
+        if (snapshot.exists()) {
+          // Convert snapshot object to array
+          students = Object.values(snapshot.val());
+        }
+
+        if (studentCount) studentCount.innerText = students.length;
+
+        if (students.length > 0) {
+          let total = 0;
+          let graded = 0;
+
+          students.forEach(s => {
+            if (typeof s.overall === "number") {
+              total += s.overall;
+              graded++;
+            }
+          });
+
+          if (averageGrade && graded > 0) {
+            averageGrade.innerText = (total / graded).toFixed(1);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching students:", err);
       }
-    });
 
-    const averageGrade = document.getElementById("averageGrade");
-    if (averageGrade && graded > 0) {
-      averageGrade.innerText = (total / graded).toFixed(1);
+    } else {
+      // No user logged in
+      if (userNameDisplay) userNameDisplay.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "none";
     }
-  }
+  });
+
+  // Attach logout
+  window.logout = async function () {
+    try {
+      await signOut(auth);
+      window.location.href = "login.html";
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 });
 
-// outside so it can be used
+// Format email for display
 function formatUserName(email) {
   return email.replace("@gmail.com", "");
-}
-
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
 }
