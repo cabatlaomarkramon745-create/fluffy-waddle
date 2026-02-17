@@ -7,14 +7,13 @@
 </head>
 <body>
 
-  <!-- navigator bar -->
+  <!-- Navbar -->
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
 
-    <!-- Seach bar -->
+    <!-- Search bar -->
     <div class="search-wrapper">
       <input type="text" class="search-bar" placeholder="Search students...">
-      
     </div>
 
     <div class="profile-area">
@@ -32,45 +31,37 @@
     </div>
   </div>
 
-  <!-- side on the left -->
+  <!-- Side menu -->
   <div class="side-menu" id="sideMenu">
     <span class="close-btn" onclick="closeMenu()">✖</span>
     <a href="home.html">🏠 Home</a>
-    <a href="students.html">📄Students</a>
-    <a href="grading.html"> 🧮Grading</a>
-    
+    <a href="students.html">📄 Students</a>
+    <a href="grading.html">🧮 Grading</a>
   </div>
 
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-  <!-- Main -->
+  <!-- Main content -->
   <div class="main-content">
     <h1 style="text-align: center;">Welcome, <span id="userNameDisplay">Guest</span></h1>
     
-    
-    
-    <!-- count student -->
+    <!-- Stats -->
     <div class="stats">
-        
       <div class="stat-box">👨‍🎓
         Students Graded<br>
         <strong id="studentCount">0</strong>
       </div>      
     </div>
 
-    <!-- belowest -->
     <h2 class="start-text" style="text-align: center;">Let’s get started</h2>
 
     <div class="cards">
-      <div class="card" onclick="location.href='grading.html'">
-        🧮 Grading
-      </div>
-            <div class="card" onclick="location.href='students.html'">
-        📄 View Students
-      </div>
+      <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
+      <div class="card" onclick="location.href='students.html'">📄 View Students</div>
     </div>
   </div>
 
-  <script src="js/home.js"></script>
+  <!-- Load home.js as module to use Firebase -->
+  <script type="module" src="js/home.js"></script>
 </body>
 </html>
