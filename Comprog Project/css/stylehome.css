@@ -201,9 +201,4 @@ body {
   background: #eaeaea; 
 }
 
-/* laptop */
-@media (min-width: 768px) {
-  .container {
-    max-width: 500px;
-  }
 }
