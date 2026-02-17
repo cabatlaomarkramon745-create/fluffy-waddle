@@ -1,17 +1,7 @@
-import { auth } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-
-// ===== AUTH =====
-onAuthStateChanged(auth, (user) => {
-  if (user) currentUserId = user.uid;
-});
-
 // ===== LOAD QUIZZES =====
 export function loadQuizzes() {
   const quizList = document.getElementById("quizList");
   if (!quizList) return;
-
   quizList.innerHTML = "";
 
   // Load saved totals from sessionStorage
@@ -27,7 +17,6 @@ export function addQuiz(score = 0, max = 20) {
   if (!quizList) return;
 
   const count = quizList.children.length + 1;
-
   const div = document.createElement("div");
   div.className = "score-group";
 
@@ -54,7 +43,7 @@ function renumberQuizzes() {
   });
 }
 
-// ===== SAVE TOTALS ONLY =====
+// ===== SAVE TOTALS ONLY (send to grading.html) =====
 export function saveQuizzes() {
   const quizList = document.getElementById("quizList");
   if (!quizList || !quizList.children.length) {
@@ -65,19 +54,17 @@ export function saveQuizzes() {
   // Calculate totals
   let totalScore = 0;
   let totalMax = 0;
-
   Array.from(quizList.children).forEach(div => {
     const score = Number(div.querySelector(".qScore").value) || 0;
     const max = Number(div.querySelector(".qMax").value) || 0;
-
     totalScore += score;
     totalMax += max;
   });
 
-  // Save totals in sessionStorage for grading page
+  // Save totals in sessionStorage for grading.html
   sessionStorage.setItem("quizTotals", JSON.stringify({ totalScore, totalMax }));
 
-  alert(`Total saved! Score: ${totalScore} / ${totalMax}`);
+  // Redirect to grading page
   location.href = "grading.html";
 }
 
