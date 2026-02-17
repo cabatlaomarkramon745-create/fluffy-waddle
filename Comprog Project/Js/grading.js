@@ -119,36 +119,35 @@ async function calculate() {
 
   const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
+  // ================= SAVE TO LOCAL DRAFT =================
+saveToDraft(subjectName, finalGrade);
 
-  // ===== SAVE TO FIREBASE =====
-  try {
-    const userGradesRef = ref(db, `grades/${currentUserId}`);
-    const snapshot = await get(child(userGradesRef, subjectName));
+  // ===== SAVE SUBJECT TO LOCAL DRAFT (NOT FIREBASE) =====
+function saveToDraft(subjectName, finalGrade) {
 
-    await set(child(userGradesRef, subjectName), {
+  let draft = JSON.parse(localStorage.getItem("studentDraft")) || {
+    name: "",
+    subjects: []
+  };
+
+  // prevent duplicates (same subject overwrite)
+  const existingIndex = draft.subjects.findIndex(s => s.subject === subjectName);
+
+  if (existingIndex !== -1) {
+    draft.subjects[existingIndex].grade = Number(finalGrade);
+  } else {
+    draft.subjects.push({
       subject: subjectName,
-      quiz: qS,
-      quizMax: qM,
-      exam: eS,
-      examMax: eM,
-      attendance: aS,
-      attendanceMax: aM,
-      wQuiz: wQ,
-      wExam: wE,
-      wAttend: wA,
-      overall: Number(finalGrade)
+      grade: Number(finalGrade)
     });
-
-    alert("Grade saved to Firebase!");
-
-
-
-
-  } catch (err) {
-    console.error("Error saving grade:", err);
-    alert("Failed to save grade.");
   }
+
+  localStorage.setItem("studentDraft", JSON.stringify(draft));
+
+  console.log("Draft updated:", draft);
 }
+
+
 
 // ===== QUIZ TOTALS =====
 function loadQuizTotals() {
