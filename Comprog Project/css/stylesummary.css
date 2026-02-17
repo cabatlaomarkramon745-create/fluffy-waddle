@@ -43,8 +43,12 @@ body {
 
 /* prof */
 .profile-area {
+  margin-left: auto; /* pushes profile icon to the right */
   position: relative;
+  display: flex;
+  align-items: center;
 }
+
 
 .profile-icon {
   width: 40px;
