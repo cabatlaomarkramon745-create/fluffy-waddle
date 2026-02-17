@@ -12,9 +12,10 @@ body {
   top: 0; 
   background: #3b3f46;
   color: white;
+  padding: 10px 15px;
   display: flex;
   align-items: center;
-  padding: 10px 15px; 
+  gap: 15px;
 }
 
 
@@ -43,12 +44,9 @@ body {
   margin-top: 0;
 }
 
-/* push profile to right */
 .profile-area {
-  margin-left: auto;  /* this works now */
   position: relative;
-  display: flex;
-  align-items: center;
+  margin-left: auto;   
 }
 
 
@@ -75,12 +73,12 @@ body {
   display: none;
   position: absolute;
   right: 0;
-  top: 50px;
+  top: calc(100% + 8px);
   background: white;
   width: 180px;
   border-radius: 8px;
   padding: 5px 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25); 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   text-align: left;
   z-index: 1000;
 }
