@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Grading System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grading System</title>
   <link rel="stylesheet" href="css/stylegrading.css">
-  <title>Login</title>
-  <link rel="stylesheet" href="css/stylelogin.css">
+  <link rel="stylesheet" href="css/stylehome.css">
 </head>
-<!-- NAVBAR -->
+<body>
+
+  <!-- NAVBAR -->
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
-  <div class="search-wrapper">
+    <div class="search-wrapper">
       <input type="text" class="search-bar" placeholder="Search students...">
     </div>
     <div class="profile-area">
@@ -27,6 +28,7 @@
       </div>
     </div>
   </div>
+
   <!-- SIDE MENU -->
   <div class="side-menu" id="sideMenu">
     <span class="close-btn" onclick="closeMenu()">✖</span>
@@ -36,10 +38,12 @@
     <a href="settings.html">⚙ Settings</a>
   </div>
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
-<!-- MAIN CONTENT -->
+
+  <!-- MAIN CONTENT -->
   <div class="main-content">
     <h1>Grading System</h1>
-<!-- SUBJECT -->
+
+    <!-- SUBJECT -->
     <div class="box">
       <h2>Subject</h2>
       <div class="subject-wrapper">
@@ -60,6 +64,7 @@
         </div>
       </div>
     </div>
+
     <!-- WEIGHTS -->
     <div class="box">
       <h2>1. Set Percentage (Total = 100%)</h2>
@@ -67,7 +72,8 @@
       Exam Percentage (%) <input id="wExam" type="number" value="40">
       Attendance Percentage (%) <input id="wAttend" type="number" value="20">
     </div>
-     <!-- SCORES -->
+
+    <!-- SCORES -->
     <div class="box">
       <h2>2. Enter Scores</h2>
       <div class="score-group">
@@ -87,10 +93,14 @@
         Attendance Max <input id="aMax" type="number" value="100">
       </div>
     </div>
+
+    <!-- CALCULATE -->
     <button onclick="calculate()">Calculate</button>
     <h2>Final Grade: <span id="final">0.00</span>%</h2>
     <button onclick="location.href='summary.html'">View All Subjects</button>
   </div>
-  <script src="js/grading.js"></script>
+
+  <!-- JS -->
+  <script type="module" src="Js/grading.js"></script>
 </body>
 </html>
