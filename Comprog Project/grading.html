@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grading System</title>
   <link rel="stylesheet" href="css/stylegrading.css">
-  <link rel="stylesheet" href="css/stylehome.css">
 </head>
 <body>
 
   <!-- NAVBAR -->
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
+
     <div class="search-wrapper">
       <input type="text" class="search-bar" placeholder="Search students...">
     </div>
+
     <div class="profile-area">
       <div class="profile-icon" onclick="toggleProfile(event)">
-        <img src="images/profile-icon.png" alt="Profile" 
+        <img src="images/profile-icon.png" alt="Profile"
              onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
       </div>
       <div class="profile-dropdown" id="profileDropdown">
@@ -47,13 +48,9 @@
     <div class="box">
       <h2>Subject</h2>
       <div class="subject-wrapper">
-        <input
-          type="text"
-          id="subject"
-          placeholder="Enter or select subject"
-          oninput="filterSubjects(); removeNumbers(this);"
-          onclick="toggleSubjects()"
-        >
+        <input type="text" id="subject" placeholder="Enter or select subject"
+               onclick="toggleSubjects()"
+               oninput="filterSubjects(); removeNumbers(this);">
         <span class="dropdown-btn" onclick="toggleSubjects()">▾</span>
         <div class="subject-dropdown" id="subjectDropdown">
           <div onclick="selectSubject('Math')">Math</div>
