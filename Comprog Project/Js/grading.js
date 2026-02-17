@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ================= USER AUTH =================
@@ -9,6 +9,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   currentUserId = user.uid;
+
   const userNameDisplay = document.getElementById("userDisplay");
   if (userNameDisplay) userNameDisplay.innerText = formatUserName(user.email);
 
@@ -16,7 +17,7 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("registerBtn").style.display = "none";
   document.getElementById("logoutBtn").style.display = "block";
 
-  // Load saved quiz totals and inputs from Firebase
+  // Load totals and inputs after login
   await loadQuizTotals();
   loadSavedInputs();
 });
@@ -54,8 +55,7 @@ window.logout = async () => {
 // ================= VALIDATION =================
 function validateGradingInputs() {
   const requiredFields = [
-    "subject", "qScore", "qMax",
-    "eScore", "eMax",
+    "subject", "eScore", "eMax",
     "aScore", "aMax",
     "wQuiz", "wExam", "wAttend"
   ];
@@ -65,7 +65,7 @@ function validateGradingInputs() {
     el.classList.remove("input-error");
     if (!el.value.trim()) {
       el.classList.add("input-error");
-      alert(${id} is required);
+      alert(`${id} is required`);
       el.focus();
       return false;
     }
@@ -73,7 +73,7 @@ function validateGradingInputs() {
   return true;
 }
 
-// ================= CALCULATE AND SAVE TO FIREBASE =================
+// ================= CALCULATE AND SAVE =================
 async function calculate() {
   if (!validateGradingInputs()) return;
   if (!currentUserId) return alert("Please log in first");
@@ -88,6 +88,7 @@ async function calculate() {
     return;
   }
 
+  // Quiz totals from the inputs
   const qS = Number(document.getElementById("qScore").value);
   const qM = Number(document.getElementById("qMax").value);
   const eS = Number(document.getElementById("eScore").value);
@@ -103,12 +104,14 @@ async function calculate() {
   const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
+  // Save inputs to sessionStorage
+  saveCurrentInputs();
+
   try {
-    // Save to Firebase
-    const userRef = ref(db, grades/${currentUserId}/${subjectName});
+    const userRef = ref(db, `grades/${currentUserId}/${subjectName}`);
     await set(userRef, {
       subject: subjectName,
-      quiz: qS, quizMax: qM,
+      quizzes: [{ score: qS, max: qM }],
       exam: eS, examMax: eM,
       attendance: aS, attendanceMax: aM,
       wQuiz: wQ, wExam: wE, wAttend: wA,
@@ -127,14 +130,18 @@ async function loadQuizTotals() {
   if (!currentUserId) return;
 
   try {
-    const snapshot = await get(ref(db, grades/${currentUserId}));
+    const snapshot = await get(ref(db, `grades/${currentUserId}`));
     let totalScore = 0, totalMax = 0;
 
     if (snapshot.exists()) {
-      Object.values(snapshot.val()).forEach(g => {
-        totalScore += Number(g.quiz) || 0;
-        totalMax += Number(g.quizMax) || 0;
-      });
+      const subjects = snapshot.val();
+      for (let sub in subjects) {
+        const quizzes = subjects[sub].quizzes || [];
+        quizzes.forEach(q => {
+          totalScore += Number(q.score) || 0;
+          totalMax += Number(q.max) || 0;
+        });
+      }
     }
 
     document.getElementById("qScore").value = totalScore;
