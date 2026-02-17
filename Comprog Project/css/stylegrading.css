@@ -30,8 +30,8 @@ body {
 
 /* SEARCH BAR */
 .search-wrapper {
-  margin-left: 15px;
-  width: 300px;
+  flex: 1;
+  margin: 0 20px;
 }
 
 .search-bar {
@@ -75,7 +75,6 @@ body {
   background: white;
   width: 180px;
   border-radius: 8px;
-  padding: 5px 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   text-align: left;
   z-index: 3000;
@@ -132,10 +131,8 @@ body {
 .overlay {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: rgba(0,0,0,0.4);
   z-index: 1400;
 }
@@ -148,15 +145,6 @@ body {
   align-items: center;
 }
 
-/* HEADINGS */
-.main-content h1,
-.main-content h2 {
-  text-align: center;
-  width: 100%;
-  max-width: 500px;
-  margin: 15px auto;
-}
-
 /* BOXES */
 .main-content .box {
   background: #fff;
@@ -165,6 +153,15 @@ body {
   margin-bottom: 20px;
   width: 100%;
   max-width: 500px;
+}
+
+/* HEADINGS */
+.main-content h1,
+.main-content h2 {
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  margin: 15px auto;
 }
 
 /* INPUTS */
@@ -199,11 +196,6 @@ body {
   border-radius: 8px;
   width: 100%;
   max-width: 500px;
-}
-
-.main-content .score-group h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
 }
 
 /* SUBJECT DROPDOWN */
