@@ -43,7 +43,6 @@ function renumberQuizzes() {
   }
 }
 
-// Save quizzes to Firebase and redirect
 async function saveQuizzes(redirectAfterSave = true) {
   try {
     if (!currentUserId) throw new Error("User not signed in");
@@ -57,22 +56,31 @@ async function saveQuizzes(redirectAfterSave = true) {
       max: Number(div.querySelector(".qMax").value) || 20
     }));
 
-    // Wait for Firebase to finish saving
+    // Save to Firebase
     await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
-    console.log("Quizzes saved to Firebase:", quizzes);
+    console.log("Quizzes saved:", quizzes);
 
-    // ✅ Redirect after save
+    // ✅ Calculate totals
+    const totalScore = quizzes.reduce((sum, q) => sum + q.score, 0);
+    const totalMax = quizzes.reduce((sum, q) => sum + q.max, 0);
+
+    // Store totals in sessionStorage
+    sessionStorage.setItem("quizTotals", JSON.stringify({
+      subject,
+      totalScore,
+      totalMax
+    }));
+
+    // Redirect to grading page
     if (redirectAfterSave) {
-      // Small delay ensures Firebase write completes before redirect
-      setTimeout(() => {
-        window.location.href = "grading.html";
-      }, 50);
+      window.location.href = "grading.html";
     }
   } catch (err) {
     console.error("Failed to save quizzes:", err);
     alert(err.message || "Failed to save quizzes");
   }
 }
+
 
 // Expose functions to HTML
 window.addQuiz = addQuiz;
