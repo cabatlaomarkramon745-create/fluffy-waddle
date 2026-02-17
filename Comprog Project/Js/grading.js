@@ -165,23 +165,35 @@ async function calculate() {
 
 // ===== QUIZ TOTALS =====
 async function loadQuizTotals() {
-  if (!currentUserId) return;
+  let totalScore = 0, totalMax = 0;
 
-  try {
-    const snapshot = await get(ref(db, `grades/${currentUserId}`));
-    let totalScore = 0, totalMax = 0;
-    if (snapshot.exists()) {
-      Object.values(snapshot.val()).forEach(g => {
-        totalScore += Number(g.quiz) || 0;
-        totalMax += Number(g.quizMax) || 0;
-      });
-    }
-    document.getElementById("qScore").value = totalScore;
-    document.getElementById("qMax").value = totalMax;
-  } catch (err) {
-    console.error("Error loading quiz totals:", err);
+  // 1. Try loading from sessionStorage first
+  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals"));
+  if (savedTotals) {
+    totalScore = Number(savedTotals.totalScore) || 0;
+    totalMax = Number(savedTotals.totalMax) || 0;
   }
+
+  // 2. If user is logged in, optionally merge with Firebase data
+  if (currentUserId) {
+    try {
+      const snapshot = await get(ref(db, `grades/${currentUserId}`));
+      if (snapshot.exists()) {
+        Object.values(snapshot.val()).forEach(g => {
+          totalScore += Number(g.quiz) || 0;
+          totalMax += Number(g.quizMax) || 0;
+        });
+      }
+    } catch (err) {
+      console.error("Error loading quiz totals from Firebase:", err);
+    }
+  }
+
+  // 3. Populate grading inputs
+  document.getElementById("qScore").value = totalScore;
+  document.getElementById("qMax").value = totalMax;
 }
+
 
 // ===== SAVE / LOAD INPUTS =====
 function saveCurrentInputs() {
