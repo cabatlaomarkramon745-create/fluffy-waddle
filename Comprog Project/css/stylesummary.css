@@ -14,9 +14,11 @@ body {
   color: white;
   display: flex;
   align-items: center;
-  gap: 15px;
   padding: 10px 15px; 
 }
+
+
+
 
 .menu-icon {
   font-size: 26px;
@@ -41,9 +43,9 @@ body {
   margin-top: 0;
 }
 
-/* prof */
+/* push profile to right */
 .profile-area {
-  margin-left: auto; /* pushes profile icon to the right */
+  margin-left: auto;  /* this works now */
   position: relative;
   display: flex;
   align-items: center;
