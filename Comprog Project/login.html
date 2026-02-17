@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-<link rel="stylesheet" type="text/css" href="css/stylelogin.css">
-  <div class="login-container">
+  <title>Login</title>
+  <link rel="stylesheet" href="css/stylelogin.css">
+</head>
+
+<body>
+
+<div class="login-container">
   <h1>Login</h1>
-  <div>
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
+  <label for="email">Email:</label>
+  <input type="email" id="email" required>
 
-    <div id="message"></div>
-     <a href="register.html"><button type="button">Register</button></a>
-    <div class="contain">
-    <p>Don't have an account?
-      <a href="register.html">Register</a>
-    </p>
-     <!-- FIXED: js not Js -->
-  <script type="module" src="js/login.js"></script>
+  <label for="password">Password:</label>
+  <input type="password" id="password" required>
+
+  <div id="message"></div>
+
+  <button type="button" id="loginBtn">Login</button>
+
+  <p class="contain">
+    Don't have an account?
+    <a href="register.html">Register</a>
+  </p>
+</div>
+
+<script type="module" src="js/login.js"></script>
+
 </body>
 </html>
