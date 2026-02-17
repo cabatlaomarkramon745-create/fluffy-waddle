@@ -63,7 +63,12 @@ button:hover {
   text-align: center;
 }
 
+@media (min-width: 768px) {
+  .login-container {
+    max-width: 500px;
+  }
 }
+
 
 .contain{
 text-align: center;
