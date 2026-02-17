@@ -1,252 +1,28 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
-}
-
-/* NAVBAR */
-.navbar {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: #3b3f46;
-  color: white;
-  padding: 10px 15px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  z-index: 2000;
-}
-
-.menu-icon {
-  font-size: 26px;
-  cursor: pointer;
-}
-
-/* SEARCH BAR */
-.search-wrapper {
-  flex: 1;
-  margin: 0 20px;
-}
-
-.search-bar {
-  width: 100%;
-  padding: 8px 12px 8px 35px;
-  border-radius: 20px;
-  border: none;
-  font-size: 16px;
-}
-
-/* PROFILE AREA */
-.profile-area {
-  position: relative;
-}
-
-.profile-icon {
-  width: 40px;
-  height: 40px;
-  background: white;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.profile-icon img {
-  width: 70%;
-  height: 70%;
-  object-fit: cover;
-}
-
-/* PROFILE DROPDOWN */
-.profile-dropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 8px;
-  background: white;
-  width: 180px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  text-align: left;
-  z-index: 3000;
-}
-
-.profile-dropdown a {
-  display: block;
-  text-decoration: none;
-  color: black;
-  padding: 10px 15px;
-  transition: 0.2s;
-}
-
-.profile-dropdown a:hover {
-  background: #ddd;
-}
-
-#userDisplay {
-  display: none;
-}
-
-/* SIDE MENU */
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: -250px;
-  width: 250px;
-  height: 100%;
-  background: #2f333a;
-  transition: left 0.3s ease;
-  z-index: 1500;
-}
-
-.side-menu a {
-  display: block;
-  padding: 15px 20px;
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-.side-menu a:hover {
-  background: #444;
-}
-
-.close-btn {
-  color: white;
-  font-size: 22px;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-/* OVERLAY */
-.overlay {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4);
-  z-index: 1400;
-}
-
 /* MAIN CONTENT */
 .main-content {
   padding: 30px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  /* do not center everything — only headings and buttons will be centered individually */
 }
 
-/* BOXES */
-.main-content .box {
-  background: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 500px;
-}
-
-/* HEADINGS */
+/* HEADINGS: only center H1 & FINAL GRADE H2 */
 .main-content h1,
-.main-content h2 {
+.main-content h2#final {
   text-align: center;
   width: 100%;
-  max-width: 500px;
-  margin: 15px auto;
-}
-
-/* INPUTS */
-.main-content input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  font-size: 16px;
-  border: 2px solid #000;
-  border-radius: 6px;
 }
 
 /* BUTTONS */
 .main-content button {
-  width: 200px;
+  width: 200px;          /* fixed width */
   max-width: 90%;
   padding: 12px;
-  margin: 10px auto;
+  margin: 10px auto;     /* center the button */
   font-size: 16px;
   border: 2px solid #000;
   border-radius: 6px;
   background: #fff;
   cursor: pointer;
-  display: block;
-}
-
-/* SCORE GROUP */
-.main-content .score-group {
-  margin-top: 20px;
-  padding: 15px;
-  border: 2px solid #000;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
-}
-
-/* SUBJECT DROPDOWN */
-.subject-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.subject-wrapper input {
-  width: 100%;
-  padding: 12px 40px 12px 12px;
-  font-size: 16px;
-  border: 2px solid #000;
-  border-radius: 6px;
-}
-
-.dropdown-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 18px;
-  user-select: none;
-}
-
-.subject-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background: white;
-  border: 2px solid #000;
-  border-top: none;
-  z-index: 2500;
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.subject-dropdown div {
-  padding: 10px;
-  cursor: pointer;
-}
-
-.subject-dropdown div:hover {
-  background: #ddd;
-}
-
-/* INPUT ERROR */
-.input-error {
-  border: 2px solid red !important;
-  background-color: #ffe6e6;
+  display: block;        /* needed for margin auto to center */
 }
