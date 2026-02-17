@@ -223,3 +223,14 @@ function formatUserName(email) {
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
+
+  if (!currentUserId) return;
+
+  try {
+    const snapshot = await get(ref(db, `grades/${currentUserId}`));
+    let totalScore = 0, totalMax = 0;
+    if (snapshot.exists()) {
+      Object.values(snapshot.val()).forEach(g => {
+        totalScore += Number(g.quiz) || 0;
+        totalMax += Number(g.quizMax) || 0;
+      });
