@@ -60,6 +60,11 @@ function renumberQuizzes() {
 }
 
 // ===== SAVE QUIZZES =====
+if (!currentUserId) {
+  alert("You must be logged in to save quizzes.");
+  return;
+}
+
 export async function saveQuizzes() {
   if (!currentUserId) return alert("Login first");
 
