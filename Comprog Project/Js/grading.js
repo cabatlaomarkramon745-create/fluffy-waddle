@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { ref, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ================= USER AUTH =================
@@ -18,6 +18,7 @@ onAuthStateChanged(auth, (user) => {
   document.getElementById("logoutBtn").style.display = "block";
 
   loadSavedInputs();
+  loadQuizTotalsFromSession();
 });
 
 // ================= MENU =================
@@ -49,8 +50,12 @@ document.addEventListener("click", (e) => {
 
 // ================= LOGOUT =================
 window.logout = async () => {
-  await auth.signOut();
-  location.href = "login.html";
+  try {
+    await auth.signOut();
+    location.href = "login.html";
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
 };
 
 // ================= VALIDATION =================
@@ -63,8 +68,10 @@ function validateGradingInputs() {
 
   for (let id of ids) {
     const el = document.getElementById(id);
+    el.classList.remove("input-error");
     if (!el.value.trim()) {
-      alert(id + " required");
+      el.classList.add("input-error");
+      alert(${id} is required);
       el.focus();
       return false;
     }
@@ -72,47 +79,57 @@ function validateGradingInputs() {
   return true;
 }
 
-// ================= CALCULATE =================
+// ================= CALCULATE & SAVE =================
 async function calculate() {
   if (!validateGradingInputs()) return;
-  if (!currentUserId) return alert("Login first");
+  if (!currentUserId) return alert("Please log in first");
 
   const subject = document.getElementById("subject").value.trim();
 
-  const wQ = +wQuiz.value;
-  const wE = +wExam.value;
-  const wA = +wAttend.value;
+  const wQ = +document.getElementById("wQuiz").value;
+  const wE = +document.getElementById("wExam").value;
+  const wA = +document.getElementById("wAttend").value;
 
   if (wQ + wE + wA !== 100) {
     alert("Weights must total 100%");
     return;
   }
 
-  const qS = +qScore.value, qM = +qMax.value;
-  const eS = +eScore.value, eM = +eMax.value;
-  const aS = +aScore.value, aM = +aMax.value;
+  const qS = +document.getElementById("qScore").value;
+  const qM = +document.getElementById("qMax").value;
+  const eS = +document.getElementById("eScore").value;
+  const eM = +document.getElementById("eMax").value;
+  const aS = +document.getElementById("aScore").value;
+  const aM = +document.getElementById("aMax").value;
 
-  const final =
-    ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
+  if (qS > qM || eS > eM || aS > aM) {
+    alert("Scores cannot exceed max values");
+    return;
+  }
 
+  const final = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = final;
 
+  // Save to Firebase
   try {
     const userRef = ref(db, grades/${currentUserId});
-
     await set(child(userRef, subject), {
       subject,
-      quiz:qS, quizMax:qM,
-      exam:eS, examMax:eM,
-      attendance:aS, attendanceMax:aM,
-      wQuiz:wQ, wExam:wE, wAttend:wA,
-      overall:Number(final)
+      quiz: qS, quizMax: qM,
+      exam: eS, examMax: eM,
+      attendance: aS, attendanceMax: aM,
+      wQuiz: wQ, wExam: wE, wAttend: wA,
+      overall: Number(final)
     });
 
     alert("Saved!");
-  } catch(err) {
-    alert("Save failed");
+    setTimeout(() => {
+      window.location.href = "grading.html";
+    }, 50);
+
+  } catch (err) {
     console.error(err);
+    alert("Failed to save grade");
   }
 }
 
@@ -121,43 +138,41 @@ function loadQuizTotalsFromSession() {
   const data = JSON.parse(sessionStorage.getItem("quizTotals"));
   if (!data) return;
 
-  subject.value = data.subject;
-  qScore.value = data.totalScore;
-  qMax.value = data.totalMax;
+  document.getElementById("subject").value = data.subject || "";
+  document.getElementById("qScore").value = data.totalScore || 0;
+  document.getElementById("qMax").value = data.totalMax || 0;
 
   sessionStorage.removeItem("quizTotals");
 }
 
-window.addEventListener("DOMContentLoaded", loadQuizTotalsFromSession);
-
-// ================= SAVE/LOAD INPUTS =================
+// ================= SAVE / LOAD INPUTS =================
 function saveCurrentInputs() {
   const data = {
-    subject:subject.value,
-    eScore:eScore.value,
-    eMax:eMax.value,
-    aScore:aScore.value,
-    aMax:aMax.value,
-    wQuiz:wQuiz.value,
-    wExam:wExam.value,
-    wAttend:wAttend.value
+    subject: document.getElementById("subject").value,
+    eScore: document.getElementById("eScore").value,
+    eMax: document.getElementById("eMax").value,
+    aScore: document.getElementById("aScore").value,
+    aMax: document.getElementById("aMax").value,
+    wQuiz: document.getElementById("wQuiz").value,
+    wExam: document.getElementById("wExam").value,
+    wAttend: document.getElementById("wAttend").value
   };
 
   sessionStorage.setItem("gradingInputs", JSON.stringify(data));
 }
 
 function loadSavedInputs() {
-  const d = JSON.parse(sessionStorage.getItem("gradingInputs"));
-  if (!d) return;
+  const data = JSON.parse(sessionStorage.getItem("gradingInputs"));
+  if (!data) return;
 
-  subject.value=d.subject||"";
-  eScore.value=d.eScore||"";
-  eMax.value=d.eMax||50;
-  aScore.value=d.aScore||"";
-  aMax.value=d.aMax||100;
-  wQuiz.value=d.wQuiz||40;
-  wExam.value=d.wExam||40;
-  wAttend.value=d.wAttend||20;
+  document.getElementById("subject").value = data.subject || "";
+  document.getElementById("eScore").value = data.eScore || "";
+  document.getElementById("eMax").value = data.eMax || 50;
+  document.getElementById("aScore").value = data.aScore || "";
+  document.getElementById("aMax").value = data.aMax || 100;
+  document.getElementById("wQuiz").value = data.wQuiz || 40;
+  document.getElementById("wExam").value = data.wExam || 40;
+  document.getElementById("wAttend").value = data.wAttend || 20;
 }
 
 // ================= UTILITY =================
@@ -168,3 +183,4 @@ function formatUserName(email){
 // ================= EXPORTS =================
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
+window.loadSavedInputs = loadSavedInputs;
