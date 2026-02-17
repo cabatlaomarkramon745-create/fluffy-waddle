@@ -43,7 +43,6 @@ function renumberQuizzes() {
   }
 }
 
-// Save quizzes array to Firebase
 async function saveQuizzes() {
   if (!currentUserId) return;
   const subject = document.getElementById("subject").value.trim();
@@ -58,8 +57,12 @@ async function saveQuizzes() {
   try {
     await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
     console.log("Quizzes saved to Firebase:", quizzes);
+
+    // ✅ Redirect to grading page
+    window.location.href = "grading.html";  // replace with your grading HTML filename
   } catch (err) {
     console.error("Failed to save quizzes:", err);
+    alert("Failed to save quizzes.");
   }
 }
 
