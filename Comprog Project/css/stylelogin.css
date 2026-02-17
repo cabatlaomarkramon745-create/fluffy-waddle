@@ -14,8 +14,8 @@ body {
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 90%;           
-  max-width: 400px;   
+  width: 90%;
+  max-width: 400px;
   box-sizing: border-box;
 }
 
@@ -30,7 +30,9 @@ label {
   font-weight: bold;
 }
 
+/* Inputs */
 input[type="text"],
+input[type="email"],
 input[type="password"] {
   width: 100%;
   padding: 10px;
@@ -38,6 +40,20 @@ input[type="password"] {
   border: 1px solid #ccc;
   border-radius: 3px;
   box-sizing: border-box;
+  font-size: 15px;
+}
+
+/* When clicking input */
+input:focus {
+  outline: none;
+  border-color: black;
+}
+
+/* Fix Chrome autofill making input weird */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: black !important;
 }
 
 /* Buttons */
@@ -59,17 +75,16 @@ button:hover {
 
 #message {
   margin-top: 10px;
-  color: red;
   text-align: center;
 }
 
+/* laptop */
 @media (min-width: 768px) {
   .login-container {
     max-width: 500px;
   }
 }
 
-
-.contain{
-text-align: center;
+.contain {
+  text-align: center;
 }
