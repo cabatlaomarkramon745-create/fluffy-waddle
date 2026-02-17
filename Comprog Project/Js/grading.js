@@ -220,3 +220,19 @@ function formatUserName(email) {
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
+
+function loadQuizTotalsFromSession() {
+  const data = JSON.parse(sessionStorage.getItem("quizTotals"));
+  if (!data) return;
+
+  document.getElementById("subject").value = data.subject || "";
+  document.getElementById("qScore").value = data.totalScore || 0;
+  document.getElementById("qMax").value = data.totalMax || 0;
+
+  // Remove from sessionStorage so it doesn't overwrite next time
+  sessionStorage.removeItem("quizTotals");
+}
+
+// Call this on page load
+window.addEventListener("DOMContentLoaded", loadQuizTotalsFromSession);
+
