@@ -1,67 +1,109 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Student System</title>
-  <link rel="stylesheet" href="css/stylehome.css">
-</head>
-<body>
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  <!-- Navbar -->
-  <div class="navbar">
-    <span class="menu-icon" onclick="openMenu()">☰</span>
+document.addEventListener("DOMContentLoaded", function () {
 
-    <!-- Search bar -->
-    <div class="search-wrapper">
-      <input type="text" class="search-bar" placeholder="Search students...">
-    </div>
 
-    <div class="profile-area">
-      <div class="profile-icon" onclick="toggleProfile(event)">
-        <img src="images/profile-icon.png" 
-             alt="Profile" 
-             onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
-      </div>
+  const sideMenu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("overlay");
+  const profileDropdown = document.getElementById("profileDropdown");
 
-      <div class="profile-dropdown" id="profileDropdown">                        
-        <a href="login.html" id="loginBtn">Login</a>
-        <a href="register.html" id="registerBtn">Register</a>
-        <a href="#" id="logoutBtn" onclick="logout()" style="display:none;">Logout</a>
-      </div>
-    </div>
-  </div>
 
-  <!-- Side menu -->
-  <div class="side-menu" id="sideMenu">
-    <span class="close-btn" onclick="closeMenu()">✖</span>
-    <a href="home.html">🏠 Home</a>
-    <a href="students.html">📄 Students</a>
-    <a href="grading.html">🧮 Grading</a>
-  </div>
 
-  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-  <!-- Main content -->
-  <div class="main-content">
-    <h1 style="text-align: center;">Welcome, <span id="userNameDisplay">Guest</span></h1>
-    
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-box">👨‍🎓
-        Students Graded<br>
-        <strong id="studentCount">0</strong>
-      </div>      
-    </div>
 
-    <h2 class="start-text" style="text-align: center;">Let’s get started</h2>
 
-    <div class="cards">
-      <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
-      <div class="card" onclick="location.href='students.html'">📄 View Students</div>
-    </div>
-  </div>
 
-  <!-- Load home.js as module to use Firebase -->
-  <script type="module" src="Js/home.js"></script>
-</body>
-</html>
+  // Menu functions
+  window.openMenu = function () {
+    sideMenu.style.left = "0";
+    overlay.style.display = "block";
+
+
+  };
+
+  window.closeMenu = function () {
+    sideMenu.style.left = "-250px";
+    overlay.style.display = "none";
+
+
+  };
+
+  window.toggleProfile = function (event) {
+    event.stopPropagation();
+    profileDropdown.style.display =
+      profileDropdown.style.display === "block" ? "none" : "block";
+
+
+  };
+
+
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".profile-area")) {
+      profileDropdown.style.display = "none";
+    }
+  });
+
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const studentCount = document.getElementById("studentCount");
+  const averageGrade = document.getElementById("averageGrade");
+
+  // Firebase: check if user is logged in
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const email = user.email;
+      userNameDisplay.innerText = formatUserName(email);
+
+
+
+
+      if (loginBtn) loginBtn.style.display = "none";
+      if (registerBtn) registerBtn.style.display = "none";
+@@ -54,13 +64,12 @@
+        const snapshot = await get(child(dbRef, ""));
+        let students = [];
+        if (snapshot.exists()) {
+          // Convert snapshot object to array
+          students = Object.values(snapshot.val());
+        }
+
+        if (studentCount) studentCount.innerText = students.length;
+
+        if (students.length > 0) {
+          let total = 0;
+          let graded = 0;
+
+@@ -71,7 +80,7 @@
+            }
+          });
+
+          if (averageGrade && graded > 0) {
+            averageGrade.innerText = (total / graded).toFixed(1);
+          }
+        }
+@@ -83,10 +92,12 @@
+      // No user logged in
+      if (userNameDisplay) userNameDisplay.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "none";
+
+
+    }
+  });
+
+  // Attach logout
+  window.logout = async function () {
+    try {
+      await signOut(auth);
+@@ -97,7 +108,8 @@
+  };
+});
+
+// Format email for display
+function formatUserName(email) {
+
+  return email.replace("@gmail.com", "");
+}
