@@ -1,8 +1,3 @@
-// ===== FIREBASE =====
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
 document.addEventListener("DOMContentLoaded", () => {
 
   // ===== ELEMENTS =====
@@ -19,39 +14,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const subjectDropdown = document.getElementById("subjectDropdown");
   const subjectDropdownBtn = document.getElementById("subjectDropdownBtn");
 
-  let currentUserId = null;
-
-  // ===== MENU FUNCTIONS =====
+  // ===== MENU & PROFILE =====
   window.openMenu = () => { sideMenu.style.left = "0"; overlay.style.display = "block"; };
   window.closeMenu = () => { sideMenu.style.left = "-250px"; overlay.style.display = "none"; };
   window.toggleProfile = (e) => {
     e.stopPropagation();
     profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block";
   };
-  window.logout = async () => {
-    try { await signOut(auth); window.location.href = "login.html"; }
-    catch(err){ console.error("Logout failed:", err);}
-  };
+  window.logout = () => { alert("Logout function goes here"); };
   document.addEventListener("click", e => { if(!e.target.closest(".profile-area")) profileDropdown.style.display = "none"; });
-
-  // ===== AUTH =====
-  onAuthStateChanged(auth, async (user) => {
-    if(user){
-      currentUserId = user.uid;
-      userDisplay.innerText = formatUserName(user.email);
-      loginBtn.style.display = "none";
-      registerBtn.style.display = "none";
-      logoutBtn.style.display = "block";
-      await loadQuizTotals();
-      loadSavedInputs();
-    } else {
-      currentUserId = null;
-      userDisplay.innerText = "Guest";
-      loginBtn.style.display = "block";
-      registerBtn.style.display = "block";
-      logoutBtn.style.display = "none";
-    }
-  });
 
   // ===== SUBJECT DROPDOWN =====
   if(subjectDropdown){
@@ -68,78 +39,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== VALIDATION =====
-  function validateInputs(){
-    const ids = ["subject","eScore","eMax","aScore","aMax","wQuiz","wExam","wAttend"];
-    for(let id of ids){
-      const el = document.getElementById(id);
-      el.classList.remove("input-error");
-      if(!el.value.trim()){ el.classList.add("input-error"); el.focus(); alert(`${id} is required`); return false; }
-    }
-    return true;
-  }
+  // ===== CALCULATION =====
+  calculateBtn.addEventListener("click", () => {
+    const qS = Number(document.getElementById("qScore").value) || 0;
+    const qM = Number(document.getElementById("qMax").value) || 1;
+    const eS = Number(document.getElementById("eScore").value) || 0;
+    const eM = Number(document.getElementById("eMax").value) || 1;
+    const aS = Number(document.getElementById("aScore").value) || 0;
+    const aM = Number(document.getElementById("aMax").value) || 1;
 
-  // ===== CALCULATE =====
-  async function calculate(){
-    if(!validateInputs()) return;
-    if(!currentUserId) return alert("Please log in first");
+    const wQ = Number(document.getElementById("wQuiz").value) || 0;
+    const wE = Number(document.getElementById("wExam").value) || 0;
+    const wA = Number(document.getElementById("wAttend").value) || 0;
 
-    const subjectName = subjectInput.value.trim();
-    const wQ = Number(document.getElementById("wQuiz").value);
-    const wE = Number(document.getElementById("wExam").value);
-    const wA = Number(document.getElementById("wAttend").value);
+    if(wQ + wE + wA !== 100){ alert("Weights must total 100"); return; }
 
-    if(wQ + wE + wA !== 100){ alert("Weights must total 100%"); return; }
+    const final = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
+    document.getElementById("final").textContent = final;
+    saveInputs();
+  });
 
-    const qS = Number(document.getElementById("qScore").value);
-    const qM = Number(document.getElementById("qMax").value);
-    const eS = Number(document.getElementById("eScore").value);
-    const eM = Number(document.getElementById("eMax").value);
-    const aS = Number(document.getElementById("aScore").value);
-    const aM = Number(document.getElementById("aMax").value);
-
-    if(qS > qM || eS > eM || aS > aM){ alert("Scores cannot exceed max values"); return; }
-
-    const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
-    document.getElementById("final").textContent = finalGrade;
-
-    saveCurrentInputs();
-
-    try{
-      const gradeRef = ref(db, `grades/${currentUserId}/${subjectName}`);
-      await set(gradeRef, {
-        subject: subjectName,
-        quizzes: [{score:qS,max:qM}],
-        exam:eS, examMax:eM,
-        attendance:aS, attendanceMax:aM,
-        wQuiz:wQ, wExam:wE, wAttend:wA,
-        overall: Number(finalGrade)
-      });
-      alert("Grade saved to Firebase!");
-    } catch(err){ console.error("Error saving grade:", err); alert("Error saving grade"); }
-  }
-
-  // ===== LOAD QUIZ TOTALS =====
-  async function loadQuizTotals(){
-    if(!currentUserId) return;
-    try{
-      const snapshot = await get(ref(db, `grades/${currentUserId}`));
-      let totalScore=0, totalMax=0;
-      if(snapshot.exists()){
-        const subjects = snapshot.val();
-        for(let sub in subjects){
-          (subjects[sub].quizzes || []).forEach(q => { totalScore += Number(q.score); totalMax += Number(q.max); });
-        }
-      }
-      document.getElementById("qScore").value = totalScore;
-      document.getElementById("qMax").value = totalMax;
-    } catch(err){ console.error("Error loading quiz totals:", err); }
-  }
-
-  // ===== SAVE / LOAD INPUTS =====
-  function saveCurrentInputs(){
+  // ===== SESSION STORAGE =====
+  function saveInputs(){
     const data = {
       subject: subjectInput.value,
+      qScore: document.getElementById("qScore").value,
+      qMax: document.getElementById("qMax").value,
       eScore: document.getElementById("eScore").value,
       eMax: document.getElementById("eMax").value,
       aScore: document.getElementById("aScore").value,
@@ -151,10 +76,12 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.setItem("gradingInputs", JSON.stringify(data));
   }
 
-  function loadSavedInputs(){
+  function loadInputs(){
     const data = JSON.parse(sessionStorage.getItem("gradingInputs"));
     if(!data) return;
     subjectInput.value = data.subject || "";
+    document.getElementById("qScore").value = data.qScore || "";
+    document.getElementById("qMax").value = data.qMax || "";
     document.getElementById("eScore").value = data.eScore || "";
     document.getElementById("eMax").value = data.eMax || 50;
     document.getElementById("aScore").value = data.aScore || "";
@@ -164,10 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("wAttend").value = data.wAttend || 20;
   }
 
-  // ===== BUTTON EVENTS =====
-  calculateBtn.addEventListener("click", calculate);
-
-  // ===== UTILITY =====
-  function formatUserName(email){ return email? email.replace("@gmail.com",""):"Guest"; }
+  loadInputs();
 
 });
