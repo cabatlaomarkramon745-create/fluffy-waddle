@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { ref, get, set, child, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ===== MENU + PROFILE =====
@@ -13,12 +13,14 @@ window.openMenu = () => {
     overlay.style.display = "block";
   }
 };
+
 window.closeMenu = () => {
   if (sideMenu && overlay) {
     sideMenu.style.left = "-250px";
     overlay.style.display = "none";
   }
 };
+
 window.toggleProfile = (event) => {
   event.stopPropagation();
   if (profileDropdown) {
@@ -26,6 +28,7 @@ window.toggleProfile = (event) => {
       profileDropdown.style.display === "block" ? "none" : "block";
   }
 };
+
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".profile-area") && profileDropdown) {
     profileDropdown.style.display = "none";
@@ -34,6 +37,7 @@ document.addEventListener("click", (e) => {
 
 // ===== USER STATE =====
 let currentUserId = null;
+
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUserId = user.uid;
@@ -44,7 +48,7 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("registerBtn").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
 
-    // Load grading totals
+    // Load totals and inputs
     await loadQuizTotals();
     loadSavedInputs();
     loadEditData();
@@ -99,7 +103,6 @@ function validateGradingInputs() {
 // ===== CALCULATE & SAVE =====
 async function calculate() {
   if (!validateGradingInputs()) return;
-
   if (!currentUserId) {
     alert("Please log in to save grades.");
     return;
@@ -130,11 +133,9 @@ async function calculate() {
   const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== SAVE TO FIREBASE =====
+  // ===== SAVE TO FIREBASE AND REDIRECT =====
   try {
     const userGradesRef = ref(db, `grades/${currentUserId}`);
-    const snapshot = await get(child(userGradesRef, subjectName));
-
     await set(child(userGradesRef, subjectName), {
       subject: subjectName,
       quiz: qS,
@@ -149,7 +150,11 @@ async function calculate() {
       overall: Number(finalGrade)
     });
 
-    alert("Grade saved to Firebase!");
+    // Redirect after save
+    setTimeout(() => {
+      window.location.href = "grading.html";
+    }, 50);
+
   } catch (err) {
     console.error("Error saving grade:", err);
     alert("Failed to save grade.");
@@ -188,7 +193,7 @@ function saveCurrentInputs() {
     wExam: document.getElementById("wExam").value,
     wAttend: document.getElementById("wAttend").value
   };
-  sessionStorage.setItem("gradingInputs", JSON.stringify(data)); // temporary
+  sessionStorage.setItem("gradingInputs", JSON.stringify(data));
 }
 
 function loadSavedInputs() {
@@ -211,7 +216,7 @@ function formatUserName(email) {
   return email.replace("@gmail.com", "");
 }
 
-// Export calculate so HTML can call it
+// ===== EXPORTS =====
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
