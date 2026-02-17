@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grading System</title>
   <link rel="stylesheet" href="css/stylegrading.css">
 </head>
@@ -36,13 +36,12 @@
     <a href="home.html">🏠 Home</a>
     <a href="students.html">📄 Students</a>
     <a href="grading.html">🧮 Grading</a>
-    <a href="settings.html">⚙ Settings</a>
-  </div>
+      </div>
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
   <!-- MAIN CONTENT -->
   <div class="main-content">
-    <h1>Grading System</h1>
+    <h1 style="text-align:center;">Grading System</h1>
 
     <!-- SUBJECT -->
     <div class="box">
@@ -63,9 +62,9 @@
     <!-- WEIGHTS -->
     <div class="box">
       <h2>1. Set Percentage (Total = 100%)</h2>
-      Quiz Percentage (%) <input id="wQuiz" type="number" value="40">
-      Exam Percentage (%) <input id="wExam" type="number" value="40">
-      Attendance Percentage (%) <input id="wAttend" type="number" value="20">
+      Quiz (%) <input id="wQuiz" type="number" value="40">
+      Exam (%) <input id="wExam" type="number" value="40">
+      Attendance (%) <input id="wAttend" type="number" value="20">
     </div>
 
     <!-- SCORES -->
@@ -91,11 +90,15 @@
 
     <!-- CALCULATE -->
     <button id="calculateBtn" onclick="calculate()">Calculate</button>
-    <h2 class="final-grade">Final Grade: <span id="final">0.00</span>%</h2>
-    <button id="viewSubjectsBtn">View All Subjects</button>
+    <h2 class="final-grade" style="text-align:center;">Final Grade: <span id="final">0.00</span>%</h2>
+
+    <div class="cards">
+      <div class="card" onclick="location.href='students.html'">📄 View Students</div>
+      <div class="card" onclick="location.href='home.html'">🏠 Home</div>
+    </div>
   </div>
 
   <!-- JS -->
-  <script type="module" src="js/grading.js"></script>
+  <script type="module" src="Js/grading.js"></script>
 </body>
 </html>
