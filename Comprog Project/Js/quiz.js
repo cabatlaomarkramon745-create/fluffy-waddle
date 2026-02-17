@@ -1,7 +1,6 @@
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-let currentUserId = null;
 
 // ===== AUTH =====
 onAuthStateChanged(auth, (user) => {
