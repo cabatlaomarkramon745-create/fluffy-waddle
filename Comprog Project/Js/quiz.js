@@ -1,28 +1,29 @@
-/* Add a new quiz input */
-function addQuiz() {
+// Add a new quiz input
+function addQuiz(score = 0, max = 20) {
   let quizList = document.getElementById("quizList");
   let count = quizList.children.length + 1;
 
   let div = document.createElement("div");
   div.className = "score-group";
 
-  // ggCreate delete button
-  div.innerHTML =
-    "<h3>Quiz " + count + "</h3>" +
-    "Score: <input type='number' class='qScore' value='0'>" +
-    " Max: <input type='number' class='qMax' value='20'>" +
-    " <button type='button' class='deleteBtn'>Delete</button>";
+  div.innerHTML = `
+    <h3>Quiz ${count}</h3>
+    Score: <input type="number" class="qScore" value="${score}">
+    Max: <input type="number" class="qMax" value="${max}">
+    <button type="button" class="deleteBtn">Delete</button>
+  `;
 
-  // Add delete functionality
+  // Delete functionality
   div.querySelector(".deleteBtn").addEventListener("click", function() {
     quizList.removeChild(div);
-    renumberQuizzes(); 
+    renumberQuizzes();
+    saveQuizzes(); // auto-save after deletion
   });
 
   quizList.appendChild(div);
 }
 
-/* Count remaining quizzes after deletion */
+// Renumber quizzes after deletion
 function renumberQuizzes() {
   let quizzes = document.getElementById("quizList").children;
   for (let i = 0; i < quizzes.length; i++) {
@@ -30,34 +31,31 @@ function renumberQuizzes() {
   }
 }
 
-/* Save quiz */
+// Save quizzes to localStorage
 function saveQuizzes() {
-  let scores = document.getElementsByClassName("qScore");
-  let maxes = document.getElementsByClassName("qMax");
-
+  let quizList = document.getElementById("quizList");
   let quizzes = [];
 
-  for (let i = 0; i < scores.length; i++) {
-    quizzes.push({
-      score: Number(scores[i].value),
-      max: Number(maxes[i].value)
-    });
-  }
+  Array.from(quizList.children).forEach(div => {
+    let score = Number(div.querySelector(".qScore").value) || 0;
+    let max = Number(div.querySelector(".qMax").value) || 20;
+    quizzes.push({ score, max });
+  });
 
   localStorage.setItem("quizzes", JSON.stringify(quizzes));
-  alert("Quizzes saved!");
-  location.href = "grading.html";
+  console.log("Quizzes saved:", quizzes);
 }
 
-/* Load existing quiz */
+// Load quizzes from localStorage
 function loadQuizzes() {
   let quizzes = JSON.parse(localStorage.getItem("quizzes")) || [];
+  let quizList = document.getElementById("quizList");
 
-  for (let i = 0; i < quizzes.length; i++) {
-    addQuiz();
-    document.getElementsByClassName("qScore")[i].value = quizzes[i].score;
-    document.getElementsByClassName("qMax")[i].value = quizzes[i].max;
-  }
+  // Clear existing
+  quizList.innerHTML = "";
+
+  quizzes.forEach(q => addQuiz(q.score, q.max));
 }
 
-loadQuizzes();
+// Initialize
+document.addEventListener("DOMContentLoaded", loadQuizzes);
