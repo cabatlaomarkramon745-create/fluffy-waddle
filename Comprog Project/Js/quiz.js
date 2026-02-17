@@ -27,17 +27,15 @@ function addQuiz(score = 0, max = 20) {
     <button type="button" class="deleteBtn">Delete</button>
   `;
 
-  // Delete quiz
   div.querySelector(".deleteBtn").addEventListener("click", () => {
     quizList.removeChild(div);
     renumberQuizzes();
-    saveQuizzes(false); // Save without redirect on delete
+    saveQuizzes(false); // save without redirect
   });
 
   quizList.appendChild(div);
 }
 
-// Renumber quiz headings
 function renumberQuizzes() {
   const quizzes = document.getElementById("quizList").children;
   for (let i = 0; i < quizzes.length; i++) {
@@ -45,31 +43,34 @@ function renumberQuizzes() {
   }
 }
 
-// Save quizzes to Firebase
-// redirectAfterSave = true → go to grading.html
+// Save quizzes to Firebase and redirect
 async function saveQuizzes(redirectAfterSave = true) {
-  if (!currentUserId) return;
-
-  const subjectInput = document.getElementById("subject");
-  const subject = subjectInput?.value.trim();
-  if (!subject) return alert("Enter subject first");
-
-  const quizList = document.getElementById("quizList");
-  const quizzes = Array.from(quizList.children).map(div => ({
-    score: Number(div.querySelector(".qScore").value) || 0,
-    max: Number(div.querySelector(".qMax").value) || 20
-  }));
-
   try {
+    if (!currentUserId) throw new Error("User not signed in");
+    const subjectInput = document.getElementById("subject");
+    const subject = subjectInput?.value.trim();
+    if (!subject) throw new Error("Enter a subject first");
+
+    const quizList = document.getElementById("quizList");
+    const quizzes = Array.from(quizList.children).map(div => ({
+      score: Number(div.querySelector(".qScore").value) || 0,
+      max: Number(div.querySelector(".qMax").value) || 20
+    }));
+
+    // Wait for Firebase to finish saving
     await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
     console.log("Quizzes saved to Firebase:", quizzes);
 
+    // ✅ Redirect after save
     if (redirectAfterSave) {
-      window.location.href = "grading.html";
+      // Small delay ensures Firebase write completes before redirect
+      setTimeout(() => {
+        window.location.href = "grading.html";
+      }, 50);
     }
   } catch (err) {
     console.error("Failed to save quizzes:", err);
-    alert("Failed to save quizzes.");
+    alert(err.message || "Failed to save quizzes");
   }
 }
 
