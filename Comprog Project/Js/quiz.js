@@ -1,3 +1,6 @@
+import { auth, db } from "./firebase.js";
+import { ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
 // Add a new quiz input
 function addQuiz(score = 0, max = 20) {
   let quizList = document.getElementById("quizList");
@@ -17,7 +20,7 @@ function addQuiz(score = 0, max = 20) {
   div.querySelector(".deleteBtn").addEventListener("click", function() {
     quizList.removeChild(div);
     renumberQuizzes();
-    saveQuizzes(); // auto-save after deletion
+    saveQuizzes();
   });
 
   quizList.appendChild(div);
@@ -31,8 +34,13 @@ function renumberQuizzes() {
   }
 }
 
-// Save quizzes to localStorage
+// Save quizzes to Firebase
 function saveQuizzes() {
+  if (!auth.currentUser) {
+    alert("Please sign in first.");
+    return;
+  }
+
   let quizList = document.getElementById("quizList");
   let quizzes = [];
 
@@ -42,20 +50,44 @@ function saveQuizzes() {
     quizzes.push({ score, max });
   });
 
-  localStorage.setItem("quizzes", JSON.stringify(quizzes));
-  console.log("Quizzes saved:", quizzes);
+  const userId = auth.currentUser.uid;
+  set(ref(db, `users/${userId}/quizzes`), quizzes)
+    .then(() => {
+      console.log("Quizzes saved to Firebase:", quizzes);
+      alert("Quizzes saved!");
+    })
+    .catch(err => console.error("Error saving quizzes:", err));
 }
 
-// Load quizzes from localStorage
+// Load quizzes from Firebase
 function loadQuizzes() {
-  let quizzes = JSON.parse(localStorage.getItem("quizzes")) || [];
-  let quizList = document.getElementById("quizList");
+  if (!auth.currentUser) {
+    console.log("No user signed in yet.");
+    return;
+  }
 
-  // Clear existing
-  quizList.innerHTML = "";
+  const userId = auth.currentUser.uid;
+  const dbRef = ref(db);
 
-  quizzes.forEach(q => addQuiz(q.score, q.max));
+  get(child(dbRef, `users/${userId}/quizzes`))
+    .then(snapshot => {
+      let quizzes = snapshot.val() || [];
+      let quizList = document.getElementById("quizList");
+      quizList.innerHTML = "";
+      quizzes.forEach(q => addQuiz(q.score, q.max));
+    })
+    .catch(err => console.error("Error loading quizzes:", err));
 }
 
-// Initialize
-document.addEventListener("DOMContentLoaded", loadQuizzes);
+// Auth state observer to load quizzes automatically
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loadQuizzes();
+  } else {
+    console.log("User not signed in");
+  }
+});
+
+// Expose addQuiz to the HTML buttons
+window.addQuiz = addQuiz;
+window.saveQuizzes = saveQuizzes;
