@@ -288,7 +288,15 @@ body {
 
 .final-grade {
   text-align: center;
+  width: 100%;
   margin: 25px 0 15px 0;
   font-size: 22px;
   font-weight: bold;
 }
+
+#calculateBtn,
+#viewSubjectsBtn {
+  width: 100%;        /* full width like Edit Quizzes button */
+  max-width: 500px;   /* same as score-group box */
+  margin: 10px auto;  /* center it */
+  display: block;     /* make margin auto work */
