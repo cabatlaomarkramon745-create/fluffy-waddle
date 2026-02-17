@@ -63,11 +63,6 @@ button:hover {
   text-align: center;
 }
 
-/* laptop */
-@media (min-width: 768px) {
-  .container {
-    max-width: 500px;
-  }
 }
 
 .contain{
