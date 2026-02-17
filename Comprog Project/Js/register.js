@@ -110,5 +110,6 @@ function showSuccess(message) {
   const messageDiv = document.getElementById("message");
   messageDiv.textContent = message;
   messageDiv.style.color = "green";
-}});
+}
+
 
