@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-<link rel="stylesheet" type="text/css" href="css/stylelogin.css">
-  
+  <title>Login</title>
+  <link rel="stylesheet" type="text/css" href="css/stylelogin.css">
 </head>
+
 <body>
-<div class="login-container">
-  <h1>Login</h1>
-  <div>
+  <div class="login-container">
+    <h1>Login</h1>
+
     <label for="email">Email:</label>
     <input type="email" id="email" name="email" required>
 
@@ -16,18 +16,16 @@
     <input type="password" id="password" name="password" required>
 
     <div id="message"></div>
+
     <button type="button" id="loginBtn">Login</button>
-    <a href="register.html"><button type="button">Register</button></a>
-    <div class="contain">
-    <p>
+
+    <p class="contain">
       Don't have an account?
       <a href="register.html">Register</a>
     </p>
-    </div>
-    
   </div>
-</div>
 
-<script type="module" src="Js/login.js"></script>
+  <!-- FIXED: js not Js -->
+  <script type="module" src="js/login.js"></script>
 </body>
 </html>
