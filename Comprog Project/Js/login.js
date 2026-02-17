@@ -1,6 +1,6 @@
 import { auth } from "./firebase.js";
 import { signInWithEmailAndPassword } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginBtn");
@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const messageDiv = document.getElementById("message");
 
   loginBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    let email = emailInput.value.trim().toLowerCase(); // lowercase for consistency
+    let password = passwordInput.value.trim();
 
     if (!email || !password) {
       showError("Please fill in both fields.");
@@ -21,7 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loginBtn.textContent = "Logging in...";
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      console.log("Login successful:", user);
+
+      // Optionally save logged in email locally
+      localStorage.setItem("loggedInUser", email);
 
       showSuccess("✅ Login successful! Redirecting...");
 
@@ -30,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 1000);
 
     } catch (error) {
+      console.error("Firebase login error:", error); // debug
       handleLoginError(error);
     } finally {
       loginBtn.disabled = false;
@@ -37,11 +44,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Press Enter to login
-  passwordInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      loginBtn.click();
-    }
+  // Press Enter to login (works on both email & password fields)
+  [emailInput, passwordInput].forEach(input => {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loginBtn.click();
+    });
   });
 });
 
