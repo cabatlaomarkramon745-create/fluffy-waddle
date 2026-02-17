@@ -143,6 +143,9 @@ body {
 /* MAIN CONTENT */
 .main-content {
   padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center all children */
 }
 
 /* BOXES */
@@ -156,6 +159,14 @@ body {
   margin: auto;
 }
 
+/* HEADINGS */
+.main-content h1,
+.main-content h2 {
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  margin: 15px auto;
+
 /* INPUTS */
 .main-content input {
   width: 100%;
@@ -168,14 +179,16 @@ body {
 
 /* BUTTONS */
 .main-content button {
-  width: 100%;
+  width: 200px;          /* fixed width */
+  max-width: 90%;        /* responsive on mobile */
   padding: 12px;
-  margin-top: 10px;
+  margin: 10px auto;     /* center the button */
   font-size: 16px;
   border: 2px solid #000;
   border-radius: 6px;
   background: #fff;
   cursor: pointer;
+  display: block;        /* make margin auto work */
 }
 
 /* SCORE GROUP */
