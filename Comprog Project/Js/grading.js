@@ -35,17 +35,7 @@ document.addEventListener("click", (e) => {
 });
 
 // ===== USER STATE =====
-let currentUserId = null;
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUserId = user.uid;
-    const userNameDisplay = document.getElementById("userDisplay");
-    if (userNameDisplay) userNameDisplay.innerText = formatUserName(user.email);
-
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("registerBtn").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "block";
 
     // Load grading totals
     await loadQuizTotals();
@@ -103,10 +93,7 @@ function validateGradingInputs() {
 async function calculate() {
   if (!validateGradingInputs()) return;
 
-  if (!currentUserId) {
-    alert("Please log in to save grades.");
-    return;
-  }
+
 
   const subjectName = document.getElementById("subject").value.trim();
   const wQ = Number(document.getElementById("wQuiz").value);
@@ -164,30 +151,14 @@ async function calculate() {
 }
 
 // ===== QUIZ TOTALS =====
-async function loadQuizTotals() {
-  let totalScore = 0, totalMax = 0;
+function loadQuizTotals() {
+  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals")) || { totalScore: 0, totalMax: 0 };
+  document.getElementById("qScore").value = savedTotals.totalScore;
+  document.getElementById("qMax").value = savedTotals.totalMax;
+}
 
-  // 1. Try loading from sessionStorage first
-  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals"));
-  if (savedTotals) {
-    totalScore = Number(savedTotals.totalScore) || 0;
-    totalMax = Number(savedTotals.totalMax) || 0;
-  }
 
-  // 2. If user is logged in, optionally merge with Firebase data
-  if (currentUserId) {
-    try {
-      const snapshot = await get(ref(db, `grades/${currentUserId}`));
-      if (snapshot.exists()) {
-        Object.values(snapshot.val()).forEach(g => {
-          totalScore += Number(g.quiz) || 0;
-          totalMax += Number(g.quizMax) || 0;
-        });
-      }
-    } catch (err) {
-      console.error("Error loading quiz totals from Firebase:", err);
-    }
-  }
+
 
   // 3. Populate grading inputs
   document.getElementById("qScore").value = totalScore;
