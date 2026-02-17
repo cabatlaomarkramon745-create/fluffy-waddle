@@ -1,7 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { ref, get, set, child, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
 // ===== MENU + PROFILE =====
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
