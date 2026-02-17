@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (loginBtn) loginBtn.style.display = "none";
       if (registerBtn) registerBtn.style.display = "none";
-@@ -54,13 +64,12 @@
+
         const snapshot = await get(child(dbRef, ""));
         let students = [];
         if (snapshot.exists()) {
@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
           let total = 0;
           let graded = 0;
 
-@@ -71,7 +80,7 @@
+
             }
           });
 
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
             averageGrade.innerText = (total / graded).toFixed(1);
           }
         }
-@@ -83,10 +92,12 @@
+
       // No user logged in
       if (userNameDisplay) userNameDisplay.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "none";
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.logout = async function () {
     try {
       await signOut(auth);
-@@ -97,7 +108,8 @@
+
   };
 });
 
