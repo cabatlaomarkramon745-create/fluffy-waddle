@@ -1,6 +1,4 @@
-// Js/quiz.js
-import { auth, db } from "./firebase.js";
-import { ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 let currentUserId = null;
@@ -11,22 +9,16 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ===== LOAD QUIZZES =====
-export async function loadQuizzes() {
+export function loadQuizzes() {
   const quizList = document.getElementById("quizList");
   quizList.innerHTML = "";
 
-  try {
-    if (currentUserId) {
-      const snapshot = await get(ref(db, `grades/${currentUserId}/default/quizzes`));
-      const quizzes = snapshot.val() || [];
-      quizzes.forEach(q => addQuiz(q.score, q.max));
-    } else {
-      // load from localStorage if not logged in
-      const saved = JSON.parse(localStorage.getItem(`quizzes-default`)) || [];
-      saved.forEach(q => addQuiz(q.score, q.max));
-    }
-  } catch (err) {
-    console.error("Error loading quizzes:", err);
+  // Load from sessionStorage if available
+  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals")) || null;
+
+  if (savedTotals) {
+    // Create a single quiz for display purposes if totals exist
+    addQuiz(savedTotals.totalScore, savedTotals.totalMax);
   }
 }
 
@@ -61,8 +53,8 @@ function renumberQuizzes() {
   });
 }
 
-// ===== SAVE QUIZZES =====
-export async function saveQuizzes() {
+// ===== SAVE TOTALS ONLY =====
+export function saveQuizzes() {
   const quizList = document.getElementById("quizList");
   if (!quizList.children.length) return alert("Add at least one quiz!");
 
@@ -71,27 +63,17 @@ export async function saveQuizzes() {
     max: Number(div.querySelector(".qMax").value) || 0
   }));
 
-  const totalScore = quizzes.reduce((s,q)=>s+q.score,0);
-  const totalMax = quizzes.reduce((s,q)=>s+q.max,0);
+  const totalScore = quizzes.reduce((sum, q) => sum + q.score, 0);
+  const totalMax = quizzes.reduce((sum, q) => sum + q.max, 0);
 
-  try {
-    if (currentUserId) {
-      await set(ref(db, `grades/${currentUserId}/default/quizzes`), quizzes);
-    } else {
-      localStorage.setItem(`quizzes-default`, JSON.stringify(quizzes));
-    }
+  // Store only totals in sessionStorage for grading page
+  sessionStorage.setItem("quizTotals", JSON.stringify({
+    totalScore,
+    totalMax
+  }));
 
-    // store totals for grading page
-    sessionStorage.setItem("quizTotals", JSON.stringify({
-      totalScore,
-      totalMax
-    }));
-
-    alert("Quizzes saved!");
-  } catch (err) {
-    console.error("Error saving quizzes:", err);
-    alert("Failed to save quizzes.");
-  }
+  alert("Total score saved!");
+  location.href = "grading.html"; // Redirect to grading page
 }
 
 // ===== AUTO LOAD ON PAGE LOAD =====
