@@ -1,6 +1,10 @@
 import { auth } from "./firebase.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+window.goToHome = function () {
+  window.location.href = "home.html";
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginBtn");
   const emailInput = document.getElementById("email");
