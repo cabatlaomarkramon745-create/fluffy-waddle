@@ -236,3 +236,17 @@ function loadQuizTotalsFromSession() {
 // Call this on page load
 window.addEventListener("DOMContentLoaded", loadQuizTotalsFromSession);
 
+// ===== LOAD QUIZ TOTALS FROM QUIZ PAGE =====
+function loadQuizTotalsFromSession() {
+  const data = JSON.parse(sessionStorage.getItem("quizTotals"));
+  if (!data) return;
+
+  document.getElementById("subject").value = data.subject;
+  document.getElementById("qScore").value = data.totalScore;
+  document.getElementById("qMax").value = data.totalMax;
+
+  sessionStorage.removeItem("quizTotals");
+}
+
+window.addEventListener("DOMContentLoaded", loadQuizTotalsFromSession);
+
