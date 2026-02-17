@@ -22,20 +22,22 @@ function addQuiz(score = 0, max = 20) {
   div.className = "score-group";
   div.innerHTML = `
     <h3>Quiz ${count}</h3>
-    Score: <input type="number" class="qScore" value="${score}">
-    Max: <input type="number" class="qMax" value="${max}">
+    Score: <input type="number" class="qScore" value="${score}" min="0">
+    Max: <input type="number" class="qMax" value="${max}" min="1">
     <button type="button" class="deleteBtn">Delete</button>
   `;
 
+  // Delete quiz
   div.querySelector(".deleteBtn").addEventListener("click", () => {
     quizList.removeChild(div);
     renumberQuizzes();
-    saveQuizzes();
+    saveQuizzes(false); // Save without redirect on delete
   });
 
   quizList.appendChild(div);
 }
 
+// Renumber quiz headings
 function renumberQuizzes() {
   const quizzes = document.getElementById("quizList").children;
   for (let i = 0; i < quizzes.length; i++) {
@@ -43,9 +45,13 @@ function renumberQuizzes() {
   }
 }
 
-async function saveQuizzes() {
+// Save quizzes to Firebase
+// redirectAfterSave = true → go to grading.html
+async function saveQuizzes(redirectAfterSave = true) {
   if (!currentUserId) return;
-  const subject = document.getElementById("subject").value.trim();
+
+  const subjectInput = document.getElementById("subject");
+  const subject = subjectInput?.value.trim();
   if (!subject) return alert("Enter subject first");
 
   const quizList = document.getElementById("quizList");
@@ -58,15 +64,16 @@ async function saveQuizzes() {
     await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
     console.log("Quizzes saved to Firebase:", quizzes);
 
-    // ✅ Redirect to grading page
-    window.location.href = "grading.html";  // replace with your grading HTML filename
+    if (redirectAfterSave) {
+      window.location.href = "grading.html";
+    }
   } catch (err) {
     console.error("Failed to save quizzes:", err);
     alert("Failed to save quizzes.");
   }
 }
 
-// Expose functions
+// Expose functions to HTML
 window.addQuiz = addQuiz;
 window.saveQuizzes = saveQuizzes;
 window.loadQuizzes = loadQuizzes;
