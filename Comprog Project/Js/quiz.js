@@ -11,13 +11,13 @@ onAuthStateChanged(auth, (user) => {
 // ===== LOAD QUIZZES =====
 export function loadQuizzes() {
   const quizList = document.getElementById("quizList");
+  if (!quizList) return;
+
   quizList.innerHTML = "";
 
-  // Load from sessionStorage if available
-  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals")) || null;
-
+  // Load saved totals from sessionStorage
+  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals"));
   if (savedTotals) {
-    // Create a single quiz for display purposes if totals exist
     addQuiz(savedTotals.totalScore, savedTotals.totalMax);
   }
 }
@@ -25,6 +25,8 @@ export function loadQuizzes() {
 // ===== ADD QUIZ =====
 export function addQuiz(score = 0, max = 20) {
   const quizList = document.getElementById("quizList");
+  if (!quizList) return;
+
   const count = quizList.children.length + 1;
 
   const div = document.createElement("div");
@@ -56,30 +58,32 @@ function renumberQuizzes() {
 // ===== SAVE TOTALS ONLY =====
 export function saveQuizzes() {
   const quizList = document.getElementById("quizList");
-  if (!quizList.children.length) return alert("Add at least one quiz!");
+  if (!quizList || !quizList.children.length) {
+    alert("Add at least one quiz!");
+    return;
+  }
 
-  const quizzes = Array.from(quizList.children).map(div => ({
-    score: Number(div.querySelector(".qScore").value) || 0,
-    max: Number(div.querySelector(".qMax").value) || 0
-  }));
+  // Calculate totals
+  let totalScore = 0;
+  let totalMax = 0;
 
-  const totalScore = quizzes.reduce((sum, q) => sum + q.score, 0);
-  const totalMax = quizzes.reduce((sum, q) => sum + q.max, 0);
+  Array.from(quizList.children).forEach(div => {
+    const score = Number(div.querySelector(".qScore").value) || 0;
+    const max = Number(div.querySelector(".qMax").value) || 0;
 
-  // Store only totals in sessionStorage for grading page
-  sessionStorage.setItem("quizTotals", JSON.stringify({
-    totalScore,
-    totalMax
-  }));
+    totalScore += score;
+    totalMax += max;
+  });
 
-  alert("Total score saved!");
-  location.href = "grading.html"; // Redirect to grading page
+  // Save totals in sessionStorage for grading page
+  sessionStorage.setItem("quizTotals", JSON.stringify({ totalScore, totalMax }));
+
+  alert(`Total saved! Score: ${totalScore} / ${totalMax}`);
+  location.href = "grading.html";
 }
 
 // ===== AUTO LOAD ON PAGE LOAD =====
-window.addEventListener("DOMContentLoaded", () => {
-  loadQuizzes();
-});
+window.addEventListener("DOMContentLoaded", loadQuizzes);
 
 // ===== EXPORT FUNCTIONS FOR HTML BUTTONS =====
 window.addQuiz = addQuiz;
