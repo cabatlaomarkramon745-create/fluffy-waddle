@@ -1,59 +1,67 @@
-// MENU + PROFILE
+import { auth, db } from "./firebase.js";
+import { ref, get, set, child, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ===== MENU + PROFILE =====
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
 
-function openMenu() {
-  sideMenu.style.left = "0";
-  overlay.style.display = "block";
-}
-function closeMenu() {
-  sideMenu.style.left = "-250px";
-  overlay.style.display = "none";
-}
-
-function toggleProfile(event) {
+window.openMenu = () => {
+  if (sideMenu && overlay) {
+    sideMenu.style.left = "0";
+    overlay.style.display = "block";
+  }
+};
+window.closeMenu = () => {
+  if (sideMenu && overlay) {
+    sideMenu.style.left = "-250px";
+    overlay.style.display = "none";
+  }
+};
+window.toggleProfile = (event) => {
   event.stopPropagation();
-  profileDropdown.style.display =
-    profileDropdown.style.display === "block" ? "none" : "block";
-}
-
-document.addEventListener("click", function (e) {
-  if (!e.target.closest(".profile-area"))
+  if (profileDropdown) {
+    profileDropdown.style.display =
+      profileDropdown.style.display === "block" ? "none" : "block";
+  }
+};
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".profile-area") && profileDropdown) {
     profileDropdown.style.display = "none";
+  }
 });
 
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-}
-
-// LOAD USER & QUIZ
-document.addEventListener("DOMContentLoaded", function () {
-  let user = localStorage.getItem("loggedInUser");
+// ===== USER STATE =====
+let currentUserId = null;
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    document.getElementById("userDisplay").innerText =
-      user.replace("@gmail.com", "");
+    currentUserId = user.uid;
+    const userNameDisplay = document.getElementById("userDisplay");
+    if (userNameDisplay) userNameDisplay.innerText = formatUserName(user.email);
+
     document.getElementById("loginBtn").style.display = "none";
     document.getElementById("registerBtn").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
-  } else {
-    document.getElementById("userDisplay").style.display = "none";
+
+    // Load grading totals
+    await loadQuizTotals();
+    loadSavedInputs();
+    loadEditData();
   }
-
-  loadQuizTotals();
-  loadSavedInputs();
-  loadEditData();
-
-  // Remove red border when typing
-  document.querySelectorAll("input").forEach(input => {
-    input.addEventListener("input", function () {
-      this.classList.remove("input-error");
-    });
-  });
 });
 
-// VALIDATION
+// Logout
+window.logout = async () => {
+  try {
+    await auth.signOut();
+    window.location.href = "login.html";
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
+// ===== VALIDATION =====
 function validateGradingInputs() {
   const requiredFields = [
     { id: "subject", name: "Subject" },
@@ -73,7 +81,6 @@ function validateGradingInputs() {
   requiredFields.forEach(field => {
     const el = document.getElementById(field.id);
     el.classList.remove("input-error");
-
     if (!el.value.trim()) {
       el.classList.add("input-error");
       if (!firstInvalid) firstInvalid = field;
@@ -89,80 +96,89 @@ function validateGradingInputs() {
   return true;
 }
 
-// CALCULATE AND SAVE TO TEMP
-function calculate() {
+// ===== CALCULATE & SAVE =====
+async function calculate() {
   if (!validateGradingInputs()) return;
 
-  let subjectName = document.getElementById("subject").value.trim();
+  if (!currentUserId) {
+    alert("Please log in to save grades.");
+    return;
+  }
 
-  let wQ = Number(document.getElementById("wQuiz").value);
-  let wE = Number(document.getElementById("wExam").value);
-  let wA = Number(document.getElementById("wAttend").value);
+  const subjectName = document.getElementById("subject").value.trim();
+  const wQ = Number(document.getElementById("wQuiz").value);
+  const wE = Number(document.getElementById("wExam").value);
+  const wA = Number(document.getElementById("wAttend").value);
 
   if (wQ + wE + wA !== 100) {
     alert("Percentage must total 100%");
     return;
   }
 
-  let qS = Number(document.getElementById("qScore").value);
-  let qM = Number(document.getElementById("qMax").value);
-  let eS = Number(document.getElementById("eScore").value);
-  let eM = Number(document.getElementById("eMax").value);
-  let aS = Number(document.getElementById("aScore").value);
-  let aM = Number(document.getElementById("aMax").value);
+  const qS = Number(document.getElementById("qScore").value);
+  const qM = Number(document.getElementById("qMax").value);
+  const eS = Number(document.getElementById("eScore").value);
+  const eM = Number(document.getElementById("eMax").value);
+  const aS = Number(document.getElementById("aScore").value);
+  const aM = Number(document.getElementById("aMax").value);
 
   if (qS > qM || eS > eM || aS > aM) {
-    alert("Scores cannot be greater than max");
+    alert("Scores cannot exceed max values");
     return;
   }
 
-  let finalGrade = (
-    (qS / qM) * wQ +
-    (eS / eM) * wE +
-    (aS / aM) * wA
-  ).toFixed(2);
-
+  const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== SAVE TO TEMP SUMMARY (instead of students directly) =====
-  let temp = JSON.parse(localStorage.getItem("tempSummary")) || { name: "", grades: [] };
-  const editSubjectIndex = localStorage.getItem("editSubjectIndex");
+  // ===== SAVE TO FIREBASE =====
+  try {
+    const userGradesRef = ref(db, `grades/${currentUserId}`);
+    const snapshot = await get(child(userGradesRef, subjectName));
 
-  if (editSubjectIndex !== null) {
-    temp.grades[editSubjectIndex] = {
+    await set(child(userGradesRef, subjectName), {
       subject: subjectName,
-      grade: Number(finalGrade)
-    };
-    alert("Grade updated!");
-  } else {
-    temp.grades.push({
-      subject: subjectName,
-      grade: Number(finalGrade)
+      quiz: qS,
+      quizMax: qM,
+      exam: eS,
+      examMax: eM,
+      attendance: aS,
+      attendanceMax: aM,
+      wQuiz: wQ,
+      wExam: wE,
+      wAttend: wA,
+      overall: Number(finalGrade)
     });
-    alert("Grade saved!");
+
+    alert("Grade saved to Firebase!");
+  } catch (err) {
+    console.error("Error saving grade:", err);
+    alert("Failed to save grade.");
   }
-
-  localStorage.setItem("tempSummary", JSON.stringify(temp));
-
-  // Clear editSubjectIndex after save
-  localStorage.removeItem("editSubjectIndex");
 }
 
-// QUIZ TOTALS
-function loadQuizTotals() {
-  let quizzes = JSON.parse(localStorage.getItem("quizzes")) || [];
-  let totalScore = 0, totalMax = 0;
-  quizzes.forEach(q => {
-    totalScore += Number(q.score) || 0;
-    totalMax += Number(q.max) || 0;
-  });
-  document.getElementById("qScore").value = totalScore;
-  document.getElementById("qMax").value = totalMax;
+// ===== QUIZ TOTALS =====
+async function loadQuizTotals() {
+  if (!currentUserId) return;
+
+  try {
+    const snapshot = await get(ref(db, `grades/${currentUserId}`));
+    let totalScore = 0, totalMax = 0;
+    if (snapshot.exists()) {
+      Object.values(snapshot.val()).forEach(g => {
+        totalScore += Number(g.quiz) || 0;
+        totalMax += Number(g.quizMax) || 0;
+      });
+    }
+    document.getElementById("qScore").value = totalScore;
+    document.getElementById("qMax").value = totalMax;
+  } catch (err) {
+    console.error("Error loading quiz totals:", err);
+  }
 }
 
-// SAVE / LOAD INPUTS
+// ===== SAVE / LOAD INPUTS =====
 function saveCurrentInputs() {
-  let data = {
+  const data = {
     subject: document.getElementById("subject").value,
     eScore: document.getElementById("eScore").value,
     eMax: document.getElementById("eMax").value,
@@ -172,11 +188,11 @@ function saveCurrentInputs() {
     wExam: document.getElementById("wExam").value,
     wAttend: document.getElementById("wAttend").value
   };
-  localStorage.setItem("gradingInputs", JSON.stringify(data));
+  sessionStorage.setItem("gradingInputs", JSON.stringify(data)); // temporary
 }
 
 function loadSavedInputs() {
-  let data = JSON.parse(localStorage.getItem("gradingInputs"));
+  const data = JSON.parse(sessionStorage.getItem("gradingInputs"));
   if (!data) return;
 
   document.getElementById("subject").value = data.subject || "";
@@ -189,53 +205,13 @@ function loadSavedInputs() {
   document.getElementById("wAttend").value = data.wAttend || 20;
 }
 
-// SUBJECT DROPDOWN
-const subjectDropdown = document.getElementById("subjectDropdown");
-const subjectInput = document.getElementById("subject");
-
-function toggleSubjects() {
-  subjectDropdown.style.display =
-    subjectDropdown.style.display === "block" ? "none" : "block";
+// ===== UTILITY =====
+function formatUserName(email) {
+  if (!email) return "Guest";
+  return email.replace("@gmail.com", "");
 }
 
-function selectSubject(value) {
-  subjectInput.value = value;
-  subjectDropdown.style.display = "none";
-}
-
-function filterSubjects() {
-  removeNumbers(subjectInput);
-
-  const filter = subjectInput.value.toLowerCase();
-  const items = subjectDropdown.querySelectorAll("div");
-
-  items.forEach(item => {
-    item.style.display =
-      item.textContent.toLowerCase().includes(filter) ? "block" : "none";
-  });
-
-  subjectDropdown.style.display = "block";
-}
-
-document.addEventListener("click", e => {
-  if (!e.target.closest(".subject-wrapper")) {
-    subjectDropdown.style.display = "none";
-  }
-});
-
-function removeNumbers(input) {
-  input.value = input.value.replace(/[^a-zA-Z\s]/g, "");
-}
-
-// LOAD EDIT DATA
-function loadEditData() {
-  const subjectIndex = localStorage.getItem("editSubjectIndex");
-  if (subjectIndex === null) return;
-
-  let temp = JSON.parse(localStorage.getItem("tempSummary")) || { name: "", grades: [] };
-  let subject = temp.grades[subjectIndex];
-  if (!subject) return;
-
-  document.getElementById("subject").value = subject.subject;
-  document.getElementById("final").textContent = subject.grade.toFixed(2);
-}
+// Export calculate so HTML can call it
+window.calculate = calculate;
+window.saveCurrentInputs = saveCurrentInputs;
+window.loadSavedInputs = loadSavedInputs;
