@@ -1,3 +1,4 @@
+// Js/quiz.js
 import { auth, db } from "./firebase.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -16,10 +17,14 @@ export async function loadQuizzes(subject) {
   const quizList = document.getElementById("quizList");
   quizList.innerHTML = "";
 
-  const snapshot = await get(ref(db, `grades/${currentUserId}/${subject}/quizzes`));
-  const quizzes = snapshot.val() || [];
+  try {
+    const snapshot = await get(ref(db, `grades/${currentUserId}/${subject}/quizzes`));
+    const quizzes = snapshot.val() || [];
 
-  quizzes.forEach(q => addQuiz(q.score, q.max));
+    quizzes.forEach(q => addQuiz(q.score, q.max));
+  } catch (err) {
+    console.error("Error loading quizzes:", err);
+  }
 }
 
 // ===== ADD QUIZ =====
@@ -37,6 +42,7 @@ export function addQuiz(score = 0, max = 20) {
     <button type="button" class="deleteBtn">Delete</button>
   `;
 
+  // delete button
   div.querySelector(".deleteBtn").onclick = () => {
     div.remove();
     renumberQuizzes();
@@ -45,11 +51,11 @@ export function addQuiz(score = 0, max = 20) {
   quizList.appendChild(div);
 }
 
-// ===== RENUMBER QUIZZES =====
+// ===== RENUMBER =====
 function renumberQuizzes() {
   const items = document.getElementById("quizList").children;
   Array.from(items).forEach((el, i) => {
-    el.querySelector("h3").textContent = `Quiz ${i+1}`;
+    el.querySelector("h3").textContent = `Quiz ${i + 1}`;
   });
 }
 
@@ -71,15 +77,33 @@ export async function saveQuizzes() {
   const totalScore = quizzes.reduce((s,q)=>s+q.score,0);
   const totalMax = quizzes.reduce((s,q)=>s+q.max,0);
 
-  // save quizzes to Firebase
-  await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
+  // save to Firebase
+  try {
+    await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
 
-  // save totals for grading page
-  sessionStorage.setItem("quizTotals", JSON.stringify({
-    subject,
-    totalScore,
-    totalMax
-  }));
+    // store totals for grading page
+    sessionStorage.setItem("quizTotals", JSON.stringify({
+      subject,
+      totalScore,
+      totalMax
+    }));
 
-  alert("Quizzes saved!");
+    alert("Quizzes saved!");
+  } catch (err) {
+    console.error("Error saving quizzes:", err);
+    alert("Failed to save quizzes.");
+  }
 }
+
+// ===== AUTO LOAD IF SUBJECT FILLED =====
+window.addEventListener("DOMContentLoaded", () => {
+  const subjectInput = document.getElementById("subject");
+  if (subjectInput && subjectInput.value.trim()) {
+    loadQuizzes(subjectInput.value.trim());
+  }
+});
+
+// Export functions for HTML buttons
+window.addQuiz = addQuiz;
+window.saveQuizzes = saveQuizzes;
+window.loadQuizzes = loadQuizzes;
