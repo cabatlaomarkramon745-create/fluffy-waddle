@@ -294,9 +294,17 @@ body {
   font-weight: bold;
 }
 
+/* Buttons for Calculate & View Subjects */
 #calculateBtn,
 #viewSubjectsBtn {
-  width: 100%;        /* full width like Edit Quizzes button */
-  max-width: 500px;   /* same as score-group box */
-  margin: 10px auto;  /* center it */
-  display: block;     /* make margin auto work */
+  width: 100%;             /* full width like Edit Quizzes */
+  max-width: 500px;        /* same as score-group box */
+  margin: 10px auto;       /* center horizontally */
+  display: block;           /* needed for margin auto to work */
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
