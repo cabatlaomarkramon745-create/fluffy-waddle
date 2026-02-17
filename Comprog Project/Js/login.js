@@ -1,20 +1,27 @@
-function goToHome() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const messageDiv = document.getElementById("message");
+import { auth } from "../firebase.js";
 
-  if (username === "" || password === "") {
-    messageDiv.textContent = "Please fill in both fields.";
-    return;
-  }
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  if (!username.toLowerCase().endsWith("@gmail.com")) {
-    messageDiv.textContent = "Use a valid Gmail.";
-    return;
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("loginBtn");
 
-  // save user
-  localStorage.setItem("loggedInUser", username);
+  loginBtn.addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-  window.location.href = "home.html";
-}
+    if (!email || !password) {
+      alert("Please enter email and password.");
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+
+      alert("✅ Login successful!");
+      window.location.href = "home.html";
+
+    } catch (error) {
+      alert("❌ " + error.message);
+    }
+  });
+});
