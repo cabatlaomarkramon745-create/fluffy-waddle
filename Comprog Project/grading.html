@@ -48,14 +48,14 @@
     <div class="box">
       <h2>Subject</h2>
       <div class="subject-wrapper">
-        <input type="text" id="subject" placeholder="Enter or select subject">
-        <span class="dropdown-btn" id="subjectDropdownBtn">▾</span>
+        <input type="text" id="subject" placeholder="Enter or select subject" oninput="filterSubjects()">
+        <span class="dropdown-btn" id="subjectDropdownBtn" onclick="toggleSubjects()">▾</span>
         <div class="subject-dropdown" id="subjectDropdown">
-          <div data-subject="Math">Math</div>
-          <div data-subject="English">English</div>
-          <div data-subject="Science">Science</div>
-          <div data-subject="History">History</div>
-          <div data-subject="Computer">Computer</div>
+          <div onclick="selectSubject('Math')">Math</div>
+          <div onclick="selectSubject('English')">English</div>
+          <div onclick="selectSubject('Science')">Science</div>
+          <div onclick="selectSubject('History')">History</div>
+          <div onclick="selectSubject('Computer')">Computer</div>
         </div>
       </div>
     </div>
@@ -90,12 +90,12 @@
     </div>
 
     <!-- CALCULATE -->
-    <button id="calculateBtn">Calculate</button>
+    <button id="calculateBtn" onclick="calculate()">Calculate</button>
     <h2 class="final-grade">Final Grade: <span id="final">0.00</span>%</h2>
     <button id="viewSubjectsBtn">View All Subjects</button>
   </div>
 
   <!-- JS -->
-  <script type="module" src="Js/grading.js"></script>
+  <script type="module" src="js/grading.js"></script>
 </body>
 </html>
