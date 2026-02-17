@@ -1,52 +1,19 @@
-import { auth, saveStudentToCloud, waitForUser } from "./firebase.js";
+<script type="module">
+import { loadStudentFromCloud, waitForUser } from "./firebase.js";
 
-let currentUser = null;
+waitForUser(async user => {
 
-waitForUser(user => {
-  currentUser = user;
-  loadDraft();
-});
+  const student = await loadStudentFromCloud(user.uid);
 
-// ===== AUTOSAVE WHILE EDITING =====
-function getStudentForm() {
-  return {
-    name: document.getElementById("name").value,
-    section: document.getElementById("section").value,
-    subjects: JSON.parse(localStorage.getItem("subjectsDraft")) || []
-  };
-}
-
-function autoSave() {
-  localStorage.setItem("studentDraft", JSON.stringify(getStudentForm()));
-}
-
-// load draft when page opens
-function loadDraft() {
-  const draft = JSON.parse(localStorage.getItem("studentDraft"));
-  if (!draft) return;
-
-  document.getElementById("name").value = draft.name || "";
-  document.getElementById("section").value = draft.section || "";
-}
-
-// attach autosave
-document.querySelectorAll("input").forEach(el => {
-  el.addEventListener("input", autoSave);
-});
-
-// ===== FINAL SAVE BUTTON =====
-window.finalSave = async function() {
-  const data = getStudentForm();
-
-  if (!data.name) {
-    alert("Student name required");
+  if (!student) {
+    document.getElementById("studentContainer").innerHTML =
+      "<p>No saved student yet.</p>";
     return;
   }
 
-  await saveStudentToCloud(currentUser.uid, data);
-
-  localStorage.removeItem("studentDraft");
-
-  alert("Saved permanently!");
-  location.href = "student.html";
-};
+  document.getElementById("studentContainer").innerHTML = `
+    <h2>${student.name}</h2>
+    <p>Section: ${student.section}</p>
+  `;
+});
+</script>
