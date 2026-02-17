@@ -1,6 +1,7 @@
+// ===== FIREBASE =====
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -16,26 +17,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const calculateBtn = document.getElementById("calculateBtn");
   const subjectInput = document.getElementById("subject");
   const subjectDropdown = document.getElementById("subjectDropdown");
+  const subjectDropdownBtn = document.getElementById("subjectDropdownBtn");
 
   let currentUserId = null;
 
-  // ===== MENU & PROFILE =====
+  // ===== MENU FUNCTIONS =====
   window.openMenu = () => { sideMenu.style.left = "0"; overlay.style.display = "block"; };
   window.closeMenu = () => { sideMenu.style.left = "-250px"; overlay.style.display = "none"; };
   window.toggleProfile = (e) => {
     e.stopPropagation();
     profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block";
   };
-  document.addEventListener("click", e => { if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none"; });
-
   window.logout = async () => {
     try { await signOut(auth); window.location.href = "login.html"; }
-    catch (err) { console.error("Logout failed:", err); }
+    catch(err){ console.error("Logout failed:", err);}
   };
+  document.addEventListener("click", e => { if(!e.target.closest(".profile-area")) profileDropdown.style.display = "none"; });
 
-  // ===== AUTH STATE =====
+  // ===== AUTH =====
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
+    if(user){
       currentUserId = user.uid;
       userDisplay.innerText = formatUserName(user.email);
       loginBtn.style.display = "none";
@@ -53,40 +54,42 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== SUBJECT DROPDOWN =====
-  if (subjectDropdown && subjectInput) {
+  if(subjectDropdown){
     subjectDropdown.querySelectorAll("div").forEach(div => {
       div.addEventListener("click", () => {
         subjectInput.value = div.dataset.subject;
         subjectDropdown.style.display = "none";
       });
     });
-    document.getElementById("subjectDropdownBtn").addEventListener("click", () => {
+  }
+  if(subjectDropdownBtn){
+    subjectDropdownBtn.addEventListener("click", () => {
       subjectDropdown.style.display = subjectDropdown.style.display === "block" ? "none" : "block";
     });
   }
 
   // ===== VALIDATION =====
-  function validateInputs() {
-    const requiredIds = ["subject", "eScore", "eMax", "aScore", "aMax", "wQuiz", "wExam", "wAttend"];
-    for (let id of requiredIds) {
+  function validateInputs(){
+    const ids = ["subject","eScore","eMax","aScore","aMax","wQuiz","wExam","wAttend"];
+    for(let id of ids){
       const el = document.getElementById(id);
       el.classList.remove("input-error");
-      if (!el.value.trim()) { el.classList.add("input-error"); el.focus(); alert(`${id} is required`); return false; }
+      if(!el.value.trim()){ el.classList.add("input-error"); el.focus(); alert(`${id} is required`); return false; }
     }
     return true;
   }
 
-  // ===== CALCULATION =====
-  async function calculate() {
-    if (!validateInputs()) return;
-    if (!currentUserId) return alert("Please log in first");
+  // ===== CALCULATE =====
+  async function calculate(){
+    if(!validateInputs()) return;
+    if(!currentUserId) return alert("Please log in first");
 
     const subjectName = subjectInput.value.trim();
     const wQ = Number(document.getElementById("wQuiz").value);
     const wE = Number(document.getElementById("wExam").value);
     const wA = Number(document.getElementById("wAttend").value);
 
-    if (wQ + wE + wA !== 100) return alert("Weights must total 100%");
+    if(wQ + wE + wA !== 100){ alert("Weights must total 100%"); return; }
 
     const qS = Number(document.getElementById("qScore").value);
     const qM = Number(document.getElementById("qMax").value);
@@ -95,46 +98,46 @@ document.addEventListener("DOMContentLoaded", () => {
     const aS = Number(document.getElementById("aScore").value);
     const aM = Number(document.getElementById("aMax").value);
 
-    if (qS > qM || eS > eM || aS > aM) return alert("Scores cannot exceed max values");
+    if(qS > qM || eS > eM || aS > aM){ alert("Scores cannot exceed max values"); return; }
 
     const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
     document.getElementById("final").textContent = finalGrade;
 
     saveCurrentInputs();
 
-    try {
+    try{
       const gradeRef = ref(db, `grades/${currentUserId}/${subjectName}`);
       await set(gradeRef, {
         subject: subjectName,
-        quizzes: [{ score: qS, max: qM }],
-        exam: eS, examMax: eM,
-        attendance: aS, attendanceMax: aM,
-        wQuiz: wQ, wExam: wE, wAttend: wA,
+        quizzes: [{score:qS,max:qM}],
+        exam:eS, examMax:eM,
+        attendance:aS, attendanceMax:aM,
+        wQuiz:wQ, wExam:wE, wAttend:wA,
         overall: Number(finalGrade)
       });
       alert("Grade saved to Firebase!");
-    } catch (err) { console.error("Error saving grade:", err); alert("Error saving grade"); }
+    } catch(err){ console.error("Error saving grade:", err); alert("Error saving grade"); }
   }
 
   // ===== LOAD QUIZ TOTALS =====
-  async function loadQuizTotals() {
-    if (!currentUserId) return;
-    try {
+  async function loadQuizTotals(){
+    if(!currentUserId) return;
+    try{
       const snapshot = await get(ref(db, `grades/${currentUserId}`));
-      let totalScore = 0, totalMax = 0;
-      if (snapshot.exists()) {
+      let totalScore=0, totalMax=0;
+      if(snapshot.exists()){
         const subjects = snapshot.val();
-        for (let sub in subjects) {
+        for(let sub in subjects){
           (subjects[sub].quizzes || []).forEach(q => { totalScore += Number(q.score); totalMax += Number(q.max); });
         }
       }
       document.getElementById("qScore").value = totalScore;
       document.getElementById("qMax").value = totalMax;
-    } catch (err) { console.error("Error loading quiz totals:", err); }
+    } catch(err){ console.error("Error loading quiz totals:", err); }
   }
 
   // ===== SAVE / LOAD INPUTS =====
-  function saveCurrentInputs() {
+  function saveCurrentInputs(){
     const data = {
       subject: subjectInput.value,
       eScore: document.getElementById("eScore").value,
@@ -148,9 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.setItem("gradingInputs", JSON.stringify(data));
   }
 
-  function loadSavedInputs() {
+  function loadSavedInputs(){
     const data = JSON.parse(sessionStorage.getItem("gradingInputs"));
-    if (!data) return;
+    if(!data) return;
     subjectInput.value = data.subject || "";
     document.getElementById("eScore").value = data.eScore || "";
     document.getElementById("eMax").value = data.eMax || 50;
@@ -161,10 +164,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("wAttend").value = data.wAttend || 20;
   }
 
-  // ===== UTILITY =====
-  function formatUserName(email) { return email ? email.replace("@gmail.com","") : "Guest"; }
-
   // ===== BUTTON EVENTS =====
   calculateBtn.addEventListener("click", calculate);
+
+  // ===== UTILITY =====
+  function formatUserName(email){ return email? email.replace("@gmail.com",""):"Guest"; }
 
 });
