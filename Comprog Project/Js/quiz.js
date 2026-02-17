@@ -1,14 +1,25 @@
-import { auth, db } from "./firebase.js";
-import { ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+// ===== QUIZZES =====
+async function loadQuizzes(subject) {
+  if (!currentUserId) return;
 
-// Add a new quiz input
+  const quizList = document.getElementById("quizList");
+  quizList.innerHTML = "";
+
+  try {
+    const snapshot = await get(ref(db, `grades/${currentUserId}/${subject}/quizzes`));
+    const quizzes = snapshot.val() || [];
+    quizzes.forEach(q => addQuiz(q.score, q.max));
+  } catch (err) {
+    console.error("Error loading quizzes:", err);
+  }
+}
+
 function addQuiz(score = 0, max = 20) {
-  let quizList = document.getElementById("quizList");
-  let count = quizList.children.length + 1;
+  const quizList = document.getElementById("quizList");
+  const count = quizList.children.length + 1;
 
-  let div = document.createElement("div");
+  const div = document.createElement("div");
   div.className = "score-group";
-
   div.innerHTML = `
     <h3>Quiz ${count}</h3>
     Score: <input type="number" class="qScore" value="${score}">
@@ -16,8 +27,7 @@ function addQuiz(score = 0, max = 20) {
     <button type="button" class="deleteBtn">Delete</button>
   `;
 
-  // Delete functionality
-  div.querySelector(".deleteBtn").addEventListener("click", function() {
+  div.querySelector(".deleteBtn").addEventListener("click", () => {
     quizList.removeChild(div);
     renumberQuizzes();
     saveQuizzes();
@@ -26,68 +36,34 @@ function addQuiz(score = 0, max = 20) {
   quizList.appendChild(div);
 }
 
-// Renumber quizzes after deletion
 function renumberQuizzes() {
-  let quizzes = document.getElementById("quizList").children;
+  const quizzes = document.getElementById("quizList").children;
   for (let i = 0; i < quizzes.length; i++) {
     quizzes[i].querySelector("h3").textContent = "Quiz " + (i + 1);
   }
 }
 
-// Save quizzes to Firebase
-function saveQuizzes() {
-  if (!auth.currentUser) {
-    alert("Please sign in first.");
-    return;
+// Save quizzes array to Firebase
+async function saveQuizzes() {
+  if (!currentUserId) return;
+  const subject = document.getElementById("subject").value.trim();
+  if (!subject) return alert("Enter subject first");
+
+  const quizList = document.getElementById("quizList");
+  const quizzes = Array.from(quizList.children).map(div => ({
+    score: Number(div.querySelector(".qScore").value) || 0,
+    max: Number(div.querySelector(".qMax").value) || 20
+  }));
+
+  try {
+    await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
+    console.log("Quizzes saved to Firebase:", quizzes);
+  } catch (err) {
+    console.error("Failed to save quizzes:", err);
   }
-
-  let quizList = document.getElementById("quizList");
-  let quizzes = [];
-
-  Array.from(quizList.children).forEach(div => {
-    let score = Number(div.querySelector(".qScore").value) || 0;
-    let max = Number(div.querySelector(".qMax").value) || 20;
-    quizzes.push({ score, max });
-  });
-
-  const userId = auth.currentUser.uid;
-  set(ref(db, `users/${userId}/quizzes`), quizzes)
-    .then(() => {
-      console.log("Quizzes saved to Firebase:", quizzes);
-      alert("Quizzes saved!");
-    })
-    .catch(err => console.error("Error saving quizzes:", err));
 }
 
-// Load quizzes from Firebase
-function loadQuizzes() {
-  if (!auth.currentUser) {
-    console.log("No user signed in yet.");
-    return;
-  }
-
-  const userId = auth.currentUser.uid;
-  const dbRef = ref(db);
-
-  get(child(dbRef, `users/${userId}/quizzes`))
-    .then(snapshot => {
-      let quizzes = snapshot.val() || [];
-      let quizList = document.getElementById("quizList");
-      quizList.innerHTML = "";
-      quizzes.forEach(q => addQuiz(q.score, q.max));
-    })
-    .catch(err => console.error("Error loading quizzes:", err));
-}
-
-// Auth state observer to load quizzes automatically
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loadQuizzes();
-  } else {
-    console.log("User not signed in");
-  }
-});
-
-// Expose addQuiz to the HTML buttons
+// Expose functions
 window.addQuiz = addQuiz;
 window.saveQuizzes = saveQuizzes;
+window.loadQuizzes = loadQuizzes;
