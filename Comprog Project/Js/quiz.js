@@ -1,6 +1,6 @@
 // Js/quiz.js
 import { auth, db } from "./firebase.js";
-import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 let currentUserId = null;
@@ -11,20 +11,18 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ===== LOAD QUIZZES =====
-export async function loadQuizzes(subject) {
-  if (!subject) return;
-
+export async function loadQuizzes() {
   const quizList = document.getElementById("quizList");
   quizList.innerHTML = "";
 
   try {
     if (currentUserId) {
-      const snapshot = await get(ref(db, `grades/${currentUserId}/${subject}/quizzes`));
+      const snapshot = await get(ref(db, `grades/${currentUserId}/default/quizzes`));
       const quizzes = snapshot.val() || [];
       quizzes.forEach(q => addQuiz(q.score, q.max));
     } else {
       // load from localStorage if not logged in
-      const saved = JSON.parse(localStorage.getItem(`quizzes-${subject}`)) || [];
+      const saved = JSON.parse(localStorage.getItem(`quizzes-default`)) || [];
       saved.forEach(q => addQuiz(q.score, q.max));
     }
   } catch (err) {
@@ -65,9 +63,6 @@ function renumberQuizzes() {
 
 // ===== SAVE QUIZZES =====
 export async function saveQuizzes() {
-  const subjectInput = document.getElementById("subject");
-  let subject = subjectInput?.value.trim() || "default";
-
   const quizList = document.getElementById("quizList");
   if (!quizList.children.length) return alert("Add at least one quiz!");
 
@@ -79,18 +74,15 @@ export async function saveQuizzes() {
   const totalScore = quizzes.reduce((s,q)=>s+q.score,0);
   const totalMax = quizzes.reduce((s,q)=>s+q.max,0);
 
-  // save
   try {
     if (currentUserId) {
-      await set(ref(db, `grades/${currentUserId}/${subject}/quizzes`), quizzes);
+      await set(ref(db, `grades/${currentUserId}/default/quizzes`), quizzes);
     } else {
-      // fallback to localStorage
-      localStorage.setItem(`quizzes-${subject}`, JSON.stringify(quizzes));
+      localStorage.setItem(`quizzes-default`, JSON.stringify(quizzes));
     }
 
     // store totals for grading page
     sessionStorage.setItem("quizTotals", JSON.stringify({
-      subject,
       totalScore,
       totalMax
     }));
@@ -102,12 +94,9 @@ export async function saveQuizzes() {
   }
 }
 
-// ===== AUTO LOAD IF SUBJECT FILLED =====
+// ===== AUTO LOAD ON PAGE LOAD =====
 window.addEventListener("DOMContentLoaded", () => {
-  const subjectInput = document.getElementById("subject");
-  if (subjectInput && subjectInput.value.trim()) {
-    loadQuizzes(subjectInput.value.trim());
-  }
+  loadQuizzes();
 });
 
 // ===== EXPORT FUNCTIONS FOR HTML BUTTONS =====
