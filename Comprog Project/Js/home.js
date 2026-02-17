@@ -2,91 +2,74 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-document.addEventListener("DOMContentLoaded", function () {
-
+document.addEventListener("DOMContentLoaded", () => {
 
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
   const profileDropdown = document.getElementById("profileDropdown");
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-
-
-
-
-
-
-  // Menu functions
-  window.openMenu = function () {
+  // Menu
+  window.openMenu = () => {
     sideMenu.style.left = "0";
     overlay.style.display = "block";
-
-
   };
 
-  window.closeMenu = function () {
+  window.closeMenu = () => {
     sideMenu.style.left = "-250px";
     overlay.style.display = "none";
-
-
   };
 
-  window.toggleProfile = function (event) {
+  // Profile dropdown
+  window.toggleProfile = (event) => {
     event.stopPropagation();
     profileDropdown.style.display =
       profileDropdown.style.display === "block" ? "none" : "block";
-
-
   };
 
-
-  document.addEventListener("click", function (e) {
+  document.addEventListener("click", (e) => {
     if (!e.target.closest(".profile-area")) {
       profileDropdown.style.display = "none";
     }
   });
 
-  const userNameDisplay = document.getElementById("userNameDisplay");
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const studentCount = document.getElementById("studentCount");
-  const averageGrade = document.getElementById("averageGrade");
+  // Format email to name
+  const formatUserName = (email) => {
+    if (!email) return "Guest";
+    return email.split("@")[0];
+  };
 
-  // Firebase: check if user is logged in
+  // Firebase auth check
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const email = user.email;
       userNameDisplay.innerText = formatUserName(email);
 
+      loginBtn.style.display = "none";
+      registerBtn.style.display = "none";
+      logoutBtn.style.display = "block";
+    } else {
+      userNameDisplay.innerText = "Guest";
+      loginBtn.style.display = "block";
+      registerBtn.style.display = "block";
+      logoutBtn.style.display = "none";
+    }
+  });
 
-
-
-      if (loginBtn) loginBtn.style.display = "none";
-      if (registerBtn) registerBtn.style.display = "none";
-
-        const snapshot = await get(child(dbRef, ""));
-        let students = [];
-        if (snapshot.exists()) {
-@@ -77,15 +77,15 @@
-          let total = 0;
-          let graded = 0;
-
-
-            }
-          });
-
-          if (averageGrade && graded > 0) {
-            averageGrade.innerText = (total / graded).toFixed(1);
-          }
-        }
-
-      // No user logged in
-      if (userNameDisplay) userNameDisplay.style.display = "none";
-      if (logoutBtn) logoutBtn.style.display = "none";
-@@ -98,7 +98,7 @@
-  window.logout = async function () {
+  // Logout
+  window.logout = async () => {
     try {
       await signOut(auth);
-
+      userNameDisplay.innerText = "Guest";
+      loginBtn.style.display = "block";
+      registerBtn.style.display = "block";
+      logoutBtn.style.display = "none";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
+
 });
