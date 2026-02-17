@@ -205,3 +205,9 @@ function formatUserName(email) {
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
+
+window.addEventListener("DOMContentLoaded", () => {
+  loadSavedInputs();
+  loadQuizTotals();  // This will read quiz totals from sessionStorage and populate the inputs
+});
+
