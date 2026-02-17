@@ -11,7 +11,6 @@
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
 
-    <!-- Search bar -->
     <div class="search-wrapper">
       <input type="text" class="search-bar" placeholder="Search students...">
     </div>
@@ -22,7 +21,6 @@
              alt="Profile" 
              onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
       </div>
-
       <div class="profile-dropdown" id="profileDropdown">                        
         <a href="login.html" id="loginBtn">Login</a>
         <a href="register.html" id="registerBtn">Register</a>
@@ -43,17 +41,9 @@
 
   <!-- Main content -->
   <div class="main-content">
-    <h1 style="text-align: center;">Welcome, <span id="userNameDisplay">Guest</span></h1>
+    <h1>Welcome, <span id="userNameDisplay">Guest</span></h1>
 
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-box">👨‍🎓
-        Students Graded<br>
-        <strong id="studentCount">0</strong>
-      </div>      
-    </div>
-
-    <h2 class="start-text" style="text-align: center;">Let’s get started</h2>
+    <h2>Let’s get started</h2>
 
     <div class="cards">
       <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
@@ -61,7 +51,6 @@
     </div>
   </div>
 
-  <!-- Load home.js as module to use Firebase -->
-  <script type="module" src="Js/home.js"></script>
+  <script type="module" src="js/home.js"></script>
 </body>
 </html>
