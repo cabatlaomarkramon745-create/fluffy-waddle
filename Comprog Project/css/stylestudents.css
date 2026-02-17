@@ -1,0 +1,267 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+/*  NAVBAR  */
+.navbar {
+  position: sticky;
+  top: 0;
+  background: #3b3f46;
+  color: white;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.menu-icon {
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/*  SEARCH BAR */
+.search-wrapper {
+  margin-left: 15px;
+  width: 300px;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 8px 12px 8px 35px;
+  border-radius: 20px;
+  border: none;
+  font-size: 16px;
+}
+
+/*  PROFILE  */
+.profile-area {
+  position: relative;
+  margin-left: auto;
+}
+
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-icon img {
+  width: 70%;
+  height: 70%;
+  object-fit: cover;
+}
+
+/*  DROPDOWN  */
+.profile-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: white;
+  width: 180px;
+  border-radius: 8px;
+  padding: 5px 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+.profile-dropdown a {
+  display: block;
+  text-decoration: none;
+  color: black;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.profile-dropdown a:hover {
+  background: #ddd;
+}
+
+#userDisplay {
+  display: none;
+}
+
+/*  SIDE MENU  */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background: #2f333a;
+  transition: 0.3s;
+  z-index: 1001;
+}
+
+.side-menu a {
+  display: block;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+}
+
+.side-menu a:hover {
+  background: #444;
+}
+
+.close-btn {
+  color: white;
+  font-size: 22px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+/*  OVERLAY  */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+/*  MAIN CONTENT (WHITE AREA)  */
+.main-content {
+  background: #ffffff;
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 30px 20px 35px;
+  border-radius: 14px;
+}
+
+/* PAGE TITLE */
+.main-content h1 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* STUDENT LIST */
+#studentContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+}
+
+/* STUDENT CARD */
+.student-card {
+  position: relative;  /* for top-right X */
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 16px;
+  padding: 22px 18px 35px;
+  text-align: center;
+}
+
+/* Red X button top-right */
+.close-student {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: red;
+  color: white;
+  border: none;
+  font-size: 18px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.close-student:hover {
+  background: darkred;
+}
+
+/* Student name */
+.student-card h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+/* Overall and Add Subject button */
+.student-card p strong {
+  font-size: 18px;
+}
+
+.student-card .add-subject-btn {
+  display: block;
+  margin: 10px auto; /* below overall */
+  padding: 8px 14px;
+  font-size: 14px;  /* smaller size */
+  border-radius: 6px;
+  border: 2px solid #000;
+  background: #fff;
+  cursor: pointer;
+}
+
+.student-card .add-subject-btn:hover {
+  background: #f2f2f2;
+}
+
+/* SUBJECTS */
+.subject-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0 0;
+}
+
+/* Individual subject item */
+.subject-item {
+  display: flex;
+  justify-content: center; /* center horizontally */
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 24px;   /* Large text like h1 */
+  font-weight: bold;
+}
+
+/* Buttons inside each subject (Edit/Delete) */
+.subject-buttons button {
+  padding: 4px 8px;
+  font-size: 12px;   /* Small buttons */
+  border-radius: 5px;
+  border: 1px solid #000;
+  background: #fff;
+  cursor: pointer;
+}
+
+.subject-buttons button:hover {
+  background: #f2f2f2;
+}
+
+/* MAIN CONTENT ADD NEW BUTTON */
+.main-content > button {
+  width: 100%;
+  max-width: 520px;
+  margin: 30px auto 0;
+  padding: 14px;
+  font-size: 18px;
+  border: 2px solid #000;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.main-content > button:hover {
+  background: #f0f0f0;
+}
+
+/* Laptop breakpoint */
+@media (min-width: 768px) {
+  .container {
+    max-width: 500px;
+  }
+}

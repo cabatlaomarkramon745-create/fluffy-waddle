@@ -1,0 +1,230 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+/* nav */
+.navbar {
+  position: sticky;
+  top: 0; 
+  background: #3b3f46;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 15px; 
+}
+
+.menu-icon {
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/* search bar */
+.search-wrapper {
+  position: relative;
+  margin-left: 15px;     
+  width: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 8px 12px 8px 35px;
+  border-radius: 20px;
+  border: none;
+  font-size: 16px;
+  margin-top: 0;
+}
+
+/* prof */
+.profile-area {
+  position: relative;
+}
+
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-icon img {
+  width: 70%;
+  height: 70%;
+  object-fit: cover;
+}
+
+/* dropdown */
+.profile-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 50px;
+  background: white;
+  width: 180px;
+  border-radius: 8px;
+  padding: 5px 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25); 
+  text-align: left;
+  z-index: 1000;
+}
+
+.profile-dropdown p {
+  margin: 0;
+  font-weight: bold;
+}
+
+.profile-dropdown a {
+  display: block;
+  text-decoration: none;
+  color: black;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.profile-dropdown a:hover {
+  background: #ddd;
+}
+
+#userDisplay {
+  display: none;
+}
+
+/* side lmenu */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background: #2f333a;
+  transition: 0.3s;
+  z-index: 1001;
+}
+
+.side-menu a {
+  display: block;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+}
+
+.side-menu a:hover { background: #444; }
+
+.close-btn {
+  color: white;
+  font-size: 22px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+/* overlay */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+/* main */
+.container {
+  max-width: 500px;
+  width: 100%;
+  margin: 20px auto; 
+  padding: 25px 20px;
+  background: #fefefe; 
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15)
+}
+
+/* cards */
+.student-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
+}
+
+/* section */
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #222;
+  padding-left: 5px;
+}
+
+/* LIST */
+.subject-list {
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.subject-item {
+  padding: 10px 5px;
+  font-size: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.subject-item:last-child {
+  border-bottom: none;
+}
+
+/* input */
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #000;
+  margin-top: 10px;
+}
+
+/* button */
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #000;
+  background: #fff;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* multi button */
+.button-container {
+  display: flex;
+  gap: 10px;
+}
+
+.button-container button {
+  flex: 1;
+}
+
+/* laptop */
+@media (min-width: 768px) {
+  .container {
+    max-width: 500px;
+  }
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grade Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/stylesummary.css">
+</head>
+<body>
+
+<!-- Navigator Bar -->
+<div class="navbar">
+  <span class="menu-icon" onclick="openMenu()">☰</span>
+  <div class="search-wrapper">
+    <input type="text" class="search-bar" placeholder="Search students...">
+  </div>
+
+  <div class="profile-area">
+    <div class="profile-icon" onclick="toggleProfile(event)">
+      <img src="images/profile-icon.png" alt="Profile" 
+           onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
+    </div>
+    <div class="profile-dropdown" id="profileDropdown">
+      <a id="userDisplay">Guest</a>        
+      <a href="login.html" id="loginBtn">Login</a>
+      <a href="register.html" id="registerBtn">Register</a>
+      <a href="#" onclick="logout()" id="logoutBtn">Logout</a>
+    </div>
+  </div>
+</div>
+
+<!-- Side Menu -->
+<div class="side-menu" id="sideMenu">
+  <span class="close-btn" onclick="closeMenu()">✖</span>
+  <a href="home.html">🏠 Home</a>
+  <a href="students.html">📄 Students</a>
+  <a href="grading.html">🧮 Grading</a>
+  <a href="settings.html">⚙ Settings</a>
+</div>
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- Main Container -->
+<div class="container">
+
+  <!-- Subjects List -->
+  <div class="student-card">
+    <div class="section-title">All Subjects:</div>
+    <div id="list" class="subject-list"></div>
+    <h2>Overall Average: <span id="avg">0.00</span>%</h2>
+  </div>
+
+  <!-- Student Name -->
+  <div class="student-card">
+    <div class="section-title">Student Name</div>
+    <input id="studentName" placeholder="Enter student name">
+    <button onclick="saveToStudents()">SAVE</button>
+  </div>
+
+  <!-- Buttons -->
+  <div class="button-container">
+    <button id="addSubjectBtn" onclick="addSubject()">Add Subject</button>
+    <button onclick="location.href='students.html'">View Students</button>
+  </div>
+
+</div>
+
+<script src="js/summary.js"></script>
+</body>
+</html>
