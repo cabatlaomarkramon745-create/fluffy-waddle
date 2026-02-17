@@ -1,44 +1,38 @@
-function registerUser() {
-  const username = document.getElementById("username").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const messageDiv = document.getElementById("message");
+import { auth, db } from "../firebase.js";
 
-  // Check empty fields
-  if (username === "" || email === "" || password === "") {
-    messageDiv.textContent = "Please fill in all fields.";
-    return;
-  }
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // Check gmail
-  if (!email.toLowerCase().endsWith("@gmail.com")) {
-    messageDiv.textContent = "Please enter a valid Gmail address (@gmail.com).";
-    return;
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  const registerBtn = document.getElementById("registerBtn");
 
- 
-  let users = JSON.parse(localStorage.getItem("users")) || [];
+  registerBtn.addEventListener("click", async () => {
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-  // Prevent duplicate email
-  const exists = users.some(u => u.email === email);
-  if (exists) {
-    messageDiv.textContent = "Email already registered.";
-    return;
-  }
+    if (!fullName || !email || !password) {
+      alert("Please fill in all fields.");
+      return;
+    }
 
-  // Save usser
-  const newUser = {
-    username: username,
-    email: email,
-    password: password
-  };
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-  users.push(newUser);
-  localStorage.setItem("users", JSON.stringify(users));
+      // Store extra info in Realtime Database
+      await set(ref(db, "users/" + user.uid), {
+        fullName: fullName,
+        email: email,
+        createdAt: new Date().toISOString()
+      });
 
-  // log in
-  localStorage.setItem("loggedInUser", email);
+      alert("✅ Account created successfully!");
+      window.location.href = "login.html";
 
-  messageDiv.textContent = "";
-  window.location.href = "home.html";
-}
+    } catch (error) {
+      alert("❌ " + error.message);
+    }
+  });
+});
+
