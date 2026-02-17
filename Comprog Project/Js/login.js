@@ -17,18 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!isValidEmail(email)) {
-      showError("Use a valid Gmail.");
-      return;
-    }
-
     loginBtn.disabled = true;
     loginBtn.textContent = "Logging in...";
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-
-      localStorage.setItem("loggedInUser", email);
 
       showSuccess("✅ Login successful! Redirecting...");
 
@@ -44,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Press Enter to login
   passwordInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       loginBtn.click();
@@ -51,18 +45,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@gmail\.com$/;
-  return emailRegex.test(email);
-}
-
 function handleLoginError(error) {
   const errorMessages = {
     "auth/user-not-found": "No account found with this email.",
     "auth/wrong-password": "Incorrect password.",
     "auth/invalid-email": "Invalid email address.",
     "auth/user-disabled": "This account has been disabled.",
-    "auth/too-many-requests": "Too many failed login attempts. Please try again later."
+    "auth/too-many-requests": "Too many failed attempts. Try again later."
   };
 
   const message = errorMessages[error.code] || error.message;
