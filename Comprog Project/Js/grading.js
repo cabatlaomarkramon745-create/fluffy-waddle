@@ -1,61 +1,70 @@
+// ================= IMPORTS =================
 import { auth, db } from "./firebase.js";
-import { ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 let currentUserId = null;
 
-// ===== DOM ELEMENTS =====
+// ================= DOM ELEMENTS =================
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
+const subjectInput = document.getElementById("subject");
 
-// ===== MENU + PROFILE =====
+// ================= MENU + PROFILE =================
 window.openMenu = () => {
+  if (!sideMenu || !overlay) return;
   sideMenu.style.left = "0";
   overlay.style.display = "block";
 };
 
 window.closeMenu = () => {
+  if (!sideMenu || !overlay) return;
   sideMenu.style.left = "-250px";
   overlay.style.display = "none";
 };
 
 window.toggleProfile = (event) => {
+  if (!profileDropdown) return;
   event.stopPropagation();
   profileDropdown.style.display =
     profileDropdown.style.display === "block" ? "none" : "block";
 };
 
 document.addEventListener("click", (e) => {
+  if (!profileDropdown) return;
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ===== FIREBASE AUTH =====
-onAuthStateChanged(auth, async (user) => {
+// ================= FIREBASE AUTH =================
+onAuthStateChanged(auth, (user) => {
+  const userDisplay = document.getElementById("userDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
   if (user) {
     currentUserId = user.uid;
+    if (userDisplay) {
+      userDisplay.innerText = user.email.split("@")[0];
+      userDisplay.style.display = "block";
+    }
+    if (loginBtn) loginBtn.style.display = "none";
+    if (registerBtn) registerBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "block";
 
-    const userDisplay = document.getElementById("userDisplay");
-    userDisplay.innerText = user.email.split("@")[0];
-    userDisplay.style.display = "block";
-
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("registerBtn").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "block";
-
-    // Load saved inputs if any
     loadSavedInputs();
     loadQuizTotals();
   } else {
     currentUserId = null;
-    document.getElementById("userDisplay").style.display = "none";
-    document.getElementById("loginBtn").style.display = "block";
-    document.getElementById("registerBtn").style.display = "block";
-    document.getElementById("logoutBtn").style.display = "none";
+    if (userDisplay) userDisplay.style.display = "none";
+    if (loginBtn) loginBtn.style.display = "block";
+    if (registerBtn) registerBtn.style.display = "block";
+    if (logoutBtn) logoutBtn.style.display = "none";
   }
 });
 
-// ===== LOGOUT =====
+// ================= LOGOUT =================
 window.logout = async () => {
   try {
     await signOut(auth);
@@ -65,8 +74,9 @@ window.logout = async () => {
   }
 };
 
-// ===== VALIDATION =====
+// ================= VALIDATION =================
 function validateGradingInputs() {
+  const lettersOnly = /^[A-Za-z\s]+$/;
   const fields = [
     { id: "subject", name: "Subject" },
     { id: "qScore", name: "Quiz Score" },
@@ -80,21 +90,18 @@ function validateGradingInputs() {
     { id: "wAttend", name: "Attendance Weight" }
   ];
 
-  const lettersOnly = /^[A-Za-z\s]+$/; // Only letters and spaces
   let firstInvalid = null;
 
   fields.forEach(f => {
     const el = document.getElementById(f.id);
+    if (!el) return;
     el.classList.remove("input-error");
     const val = el.value.trim();
 
-    // Check if empty
     if (!val) {
       el.classList.add("input-error");
       if (!firstInvalid) firstInvalid = f;
-    } 
-    // Check subject for letters only
-    else if (f.id === "subject" && !lettersOnly.test(val)) {
+    } else if (f.id === "subject" && !lettersOnly.test(val)) {
       el.classList.add("input-error");
       if (!firstInvalid) firstInvalid = { ...f, msg: "Subject can only contain letters and spaces" };
     }
@@ -109,70 +116,50 @@ function validateGradingInputs() {
   return true;
 }
 
-// ===== CALCULATE FINAL GRADE =====
+// ================= CALCULATE & SAVE =================
 async function calculate() {
   if (!validateGradingInputs()) return;
-  if (!currentUserId) {
-    alert("You must be logged in!");
-    return;
-  }
 
-  const subject = document.getElementById("subject").value.trim();
-  const wQ = Number(document.getElementById("wQuiz").value);
-  const wE = Number(document.getElementById("wExam").value);
-  const wA = Number(document.getElementById("wAttend").value);
-
-  if (wQ + wE + wA !== 100) {
-    alert("Weights must total 100%");
-    return;
-  }
-
+  const subject = subjectInput.value.trim();
   const qS = Number(document.getElementById("qScore").value);
   const qM = Number(document.getElementById("qMax").value);
   const eS = Number(document.getElementById("eScore").value);
   const eM = Number(document.getElementById("eMax").value);
   const aS = Number(document.getElementById("aScore").value);
   const aM = Number(document.getElementById("aMax").value);
+  const wQ = Number(document.getElementById("wQuiz").value);
+  const wE = Number(document.getElementById("wExam").value);
+  const wA = Number(document.getElementById("wAttend").value);
 
-  if (qS > qM || eS > eM || aS > aM) {
-    alert("Scores cannot exceed max values");
-    return;
-  }
+  if (wQ + wE + wA !== 100) { alert("Weights must total 100%"); return; }
+  if (qS > qM || eS > eM || aS > aM) { alert("Scores cannot exceed max values"); return; }
 
   const finalGrade = ((qS / qM) * wQ + (eS / eM) * wE + (aS / aM) * wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== SAVE TO FIREBASE =====
-  try {
-    await set(ref(db, `grades/${currentUserId}/${subject}`), {
-      subject,
-      quiz: qS,
-      quizMax: qM,
-      exam: eS,
-      examMax: eM,
-      attendance: aS,
-      attendanceMax: aM,
-      wQuiz: wQ,
-      wExam: wE,
-      wAttend: wA,
-      overall: Number(finalGrade)
-    });
-    alert("Grade saved to Firebase!");
-  } catch (err) {
-    console.error("Error saving grade:", err);
-    alert("Failed to save grade");
-  }
-
-  // ===== ADD TO SESSION STORAGE FOR SUMMARY =====
+  // ===== SAVE TEMP TO SESSION STORAGE =====
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
   temp.grades.push({ subject, grade: Number(finalGrade) });
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
+
+  // Optional: save to Firebase if logged in
+  if (currentUserId) {
+    try {
+      await set(ref(db, `grades/${currentUserId}/${subject}`), { subject, overall: Number(finalGrade) });
+    } catch (err) {
+      console.error("Firebase save failed:", err);
+    }
+  }
+
+  alert("Grade saved!");
 }
 
-// ===== SESSION STORAGE HELPERS =====
+// ================= SESSION STORAGE HELPERS =================
 function saveCurrentInputs() {
   const data = {
-    subject: document.getElementById("subject").value,
+    subject: subjectInput.value,
+    qScore: document.getElementById("qScore").value,
+    qMax: document.getElementById("qMax").value,
     eScore: document.getElementById("eScore").value,
     eMax: document.getElementById("eMax").value,
     aScore: document.getElementById("aScore").value,
@@ -187,11 +174,12 @@ function saveCurrentInputs() {
 function loadSavedInputs() {
   const data = JSON.parse(sessionStorage.getItem("gradingInputs"));
   if (!data) return;
-
-  document.getElementById("subject").value = data.subject || "";
-  document.getElementById("eScore").value = data.eScore || "";
+  subjectInput.value = data.subject || "";
+  document.getElementById("qScore").value = data.qScore || 0;
+  document.getElementById("qMax").value = data.qMax || 50;
+  document.getElementById("eScore").value = data.eScore || 0;
   document.getElementById("eMax").value = data.eMax || 50;
-  document.getElementById("aScore").value = data.aScore || "";
+  document.getElementById("aScore").value = data.aScore || 0;
   document.getElementById("aMax").value = data.aMax || 100;
   document.getElementById("wQuiz").value = data.wQuiz || 40;
   document.getElementById("wExam").value = data.wExam || 40;
@@ -204,20 +192,19 @@ function loadQuizTotals() {
   document.getElementById("qMax").value = totals.totalMax;
 }
 
-// ===== PREVENT NUMBERS IN SUBJECT REAL-TIME =====
-const subjectInput = document.getElementById("subject");
+// ================= REAL-TIME SUBJECT VALIDATION =================
 if (subjectInput) {
   subjectInput.addEventListener("input", () => {
     subjectInput.value = subjectInput.value.replace(/[^A-Za-z\s]/g, "");
   });
 }
 
-// ===== EXPORT FUNCTIONS FOR HTML =====
+// ================= EXPORT FUNCTIONS =================
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
 
-// ===== INITIAL LOAD =====
+// ================= INITIAL LOAD =================
 window.addEventListener("DOMContentLoaded", () => {
   loadSavedInputs();
   loadQuizTotals();
