@@ -17,7 +17,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile">
       </div>
       <div class="profile-dropdown" id="profileDropdown">
-        <a id="profileNameDisplay">Guest</a>
+        <a id="userNameDisplay">Guest</a>
         <a href="login.html" id="loginBtn">Login</a>
         <a href="register.html" id="registerBtn">Register</a>
         <a href="#" id="logoutBtn" onclick="logout()" style="display:none;">Logout</a>
@@ -39,6 +39,17 @@
   <!-- Main content -->
   <div class="main-content">
     <h1>Welcome, <span id="userNameDisplay">Guest</span></h1>
+
+    <div class="stats-container">
+      <div class="stat-box">
+        <h2>Students</h2>
+        <p id="studentCount">0</p>
+      </div>
+      <div class="stat-box">
+        <h2>Average Grade</h2>
+        <p id="averageGrade">0.0</p>
+      </div>
+    </div>
 
     <div class="cards">
       <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
