@@ -1,51 +1,25 @@
+// Import the functions you need from Firebase SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
 // ===== FIREBASE CONFIG =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
 const firebaseConfig = {
-  apiKey: "PASTE HERE",
-  authDomain: "PASTE HERE",
-  projectId: "PASTE HERE",
-  storageBucket: "PASTE HERE",
-  messagingSenderId: "PASTE HERE",
-  appId: "PASTE HERE"
-
-
+  apiKey: "AIzaSyDDNz-1PjZE3AJbB6LlkMGiSrzjGyPAqho",
+  authDomain: "comprog-project-account.firebaseapp.com",
+  databaseURL: "https://comprog-project-account-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "comprog-project-account",
+  storageBucket: "comprog-project-account.firebasestorage.app",
+  messagingSenderId: "256831010069",
+  appId: "1:256831010069:web:86b0314ab907232a7ba51c",
+  measurementId: "G-1BH1RCXW7Q"
 };
 
-
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-
+// ===== EXPORT AUTH & DB =====
 export const auth = getAuth(app);
-export const db = getFirestore(app);
-
-// ===== SAVE FINAL STUDENT =====
-export async function saveStudentToCloud(uid, studentData) {
-  await setDoc(doc(db, "students", uid), studentData);
-}
-
-// ===== LOAD STUDENT =====
-export async function loadStudentFromCloud(uid) {
-  const snap = await getDoc(doc(db, "students", uid));
-  return snap.exists() ? snap.data() : null;
-}
-
-// ===== AUTH HELPER =====
-export function waitForUser(callback) {
-  onAuthStateChanged(auth, user => {
-    if (user) callback(user);
-    else location.href = "index.html";
-  });
-}
+export const db = getDatabase(app);
