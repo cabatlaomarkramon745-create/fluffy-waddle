@@ -34,6 +34,7 @@ document.addEventListener("click", (e) => {
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUserId = user.uid;
+
     const userDisplay = document.getElementById("userDisplay");
     userDisplay.innerText = user.email.split("@")[0];
     userDisplay.style.display = "block";
@@ -45,7 +46,6 @@ onAuthStateChanged(auth, async (user) => {
     // Load saved inputs if any
     loadSavedInputs();
     loadQuizTotals();
-
   } else {
     currentUserId = null;
     document.getElementById("userDisplay").style.display = "none";
@@ -80,26 +80,28 @@ function validateGradingInputs() {
     { id: "wAttend", name: "Attendance Weight" }
   ];
 
+  const lettersOnly = /^[A-Za-z\s]+$/; // Only letters and spaces
   let firstInvalid = null;
-
-  // Regex to allow only letters (A-Z, a-z) and spaces
-  const lettersOnly = /^[A-Za-z\s]+$/;
-
-  for (const f of fields) {
-    const el = document.getElementById(f.id);
-    el.classList.remove("input-error");
 
   fields.forEach(f => {
     const el = document.getElementById(f.id);
     el.classList.remove("input-error");
-    if (!el.value.trim()) {
+    const val = el.value.trim();
+
+    // Check if empty
+    if (!val) {
       el.classList.add("input-error");
       if (!firstInvalid) firstInvalid = f;
+    } 
+    // Check subject for letters only
+    else if (f.id === "subject" && !lettersOnly.test(val)) {
+      el.classList.add("input-error");
+      if (!firstInvalid) firstInvalid = { ...f, msg: "Subject can only contain letters and spaces" };
     }
   });
 
   if (firstInvalid) {
-    alert(`${firstInvalid.name} is required`);
+    alert(firstInvalid.msg || `${firstInvalid.name} is required`);
     document.getElementById(firstInvalid.id).focus();
     return false;
   }
@@ -137,7 +139,7 @@ async function calculate() {
     return;
   }
 
-  const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
+  const finalGrade = ((qS / qM) * wQ + (eS / eM) * wE + (aS / aM) * wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
   // ===== SAVE TO FIREBASE =====
@@ -160,6 +162,11 @@ async function calculate() {
     console.error("Error saving grade:", err);
     alert("Failed to save grade");
   }
+
+  // ===== ADD TO SESSION STORAGE FOR SUMMARY =====
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+  temp.grades.push({ subject, grade: Number(finalGrade) });
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 }
 
 // ===== SESSION STORAGE HELPERS =====
@@ -195,6 +202,14 @@ function loadQuizTotals() {
   const totals = JSON.parse(sessionStorage.getItem("quizTotals")) || { totalScore: 0, totalMax: 0 };
   document.getElementById("qScore").value = totals.totalScore;
   document.getElementById("qMax").value = totals.totalMax;
+}
+
+// ===== PREVENT NUMBERS IN SUBJECT REAL-TIME =====
+const subjectInput = document.getElementById("subject");
+if (subjectInput) {
+  subjectInput.addEventListener("input", () => {
+    subjectInput.value = subjectInput.value.replace(/[^A-Za-z\s]/g, "");
+  });
 }
 
 // ===== EXPORT FUNCTIONS FOR HTML =====
