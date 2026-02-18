@@ -46,20 +46,17 @@
 
     <!-- SUBJECT -->
     <div class="box">
-      <h2>Subject</h2>
-      <div class="subject-wrapper">
-        <input type="text" id="subject" placeholder="Enter or select subject"
-               onclick="toggleSubjects()"
-               oninput="filterSubjects(); removeNumbers(this);">
-        <span class="dropdown-btn" onclick="toggleSubjects()">▾</span>
-        <div class="subject-dropdown" id="subjectDropdown">
-          <div onclick="selectSubject('Math')">Math</div>
-          <div onclick="selectSubject('English')">English</div>
-          <div onclick="selectSubject('Science')">Science</div>
-          <div onclick="selectSubject('History')">History</div>
-          <div onclick="selectSubject('Computer')">Computer</div>
-        </div>
-      </div>
+      <label for="subject">Subject:</label>
+<input list="subjectOptions" id="subject" placeholder="Type or select subject..." autocomplete="off">
+
+<datalist id="subjectOptions">
+  <option value="Mathematics">
+  <option value="Science">
+  <option value="History">
+  <option value="English">
+  <option value="Programming">
+</datalist>
+      
     </div>
 
     <!-- WEIGHTS -->
