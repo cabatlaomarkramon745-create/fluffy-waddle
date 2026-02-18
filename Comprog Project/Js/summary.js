@@ -1,72 +1,158 @@
-async function calculate() {
-  // ===== VALIDATION =====
-  if (!validateGradingInputs()) return;
-  if (!currentUserId) {
-    alert("You must be logged in!");
+// ================= MENU + PROFILE =================
+const sideMenu = document.getElementById("sideMenu");
+const overlay = document.getElementById("overlay");
+const profileDropdown = document.getElementById("profileDropdown");
+
+function openMenu() {
+  if (!sideMenu || !overlay) return;
+  sideMenu.style.left = "0";
+  overlay.style.display = "block";
+}
+
+function closeMenu() {
+  if (!sideMenu || !overlay) return;
+  sideMenu.style.left = "-250px";
+  overlay.style.display = "none";
+}
+
+function toggleProfile(event) {
+  if (!profileDropdown) return;
+  event.stopPropagation();
+  profileDropdown.style.display =
+    profileDropdown.style.display === "block" ? "none" : "block";
+}
+
+document.addEventListener("click", function (e) {
+  if (!profileDropdown) return;
+  if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
+});
+
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+
+// ================= LOAD USER DISPLAY =================
+document.addEventListener("DOMContentLoaded", function () {
+  let user = localStorage.getItem("loggedInUser");
+  const userDisplay = document.getElementById("userDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (!userDisplay) return; // skip if page has no menu
+
+  if (user) {
+    userDisplay.innerText = user.replace("@gmail.com", "");
+    if (loginBtn) loginBtn.style.display = "none";
+    if (registerBtn) registerBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "block";
+  } else {
+    userDisplay.style.display = "none";
+  }
+});
+
+// ================= SUMMARY =================
+let students = [];
+let studentNameInput;
+let list;
+let avg;
+
+document.addEventListener("DOMContentLoaded", () => {
+  studentNameInput = document.getElementById("studentName");
+  list = document.getElementById("list");
+  avg = document.getElementById("avg");
+
+  students = JSON.parse(localStorage.getItem("students")) || [];
+
+  loadTempSummary();
+});
+
+// ----------------- LOAD TEMP SUMMARY (SESSION STORAGE) -----------------
+function loadTempSummary() {
+  // USE sessionStorage here to match grading.js
+  const temp = JSON.parse(sessionStorage.getItem("tempSummary"));
+
+  list.innerHTML = "";
+  avg.textContent = "0.00";
+  if (!studentNameInput) return;
+  studentNameInput.value = "";
+
+  if (!temp || !temp.grades || temp.grades.length === 0) {
+    list.innerHTML = "<p>No pending grades yet. Go to Grading first.</p>";
     return;
   }
 
-  // ===== GET INPUTS =====
-  const subject = document.getElementById("subject").value.trim();
-  const wQ = Number(document.getElementById("wQuiz").value);
-  const wE = Number(document.getElementById("wExam").value);
-  const wA = Number(document.getElementById("wAttend").value);
+  studentNameInput.value = temp.name || "";
 
-  if (wQ + wE + wA !== 100) {
-    alert("Weights must total 100%");
-    return;
-  }
+  let total = 0;
 
-  const qS = Number(document.getElementById("qScore").value);
-  const qM = Number(document.getElementById("qMax").value);
-  const eS = Number(document.getElementById("eScore").value);
-  const eM = Number(document.getElementById("eMax").value);
-  const aS = Number(document.getElementById("aScore").value);
-  const aM = Number(document.getElementById("aMax").value);
+  temp.grades.forEach((g, i) => {
+    total += Number(g.grade || 0);
 
-  if (qS > qM || eS > eM || aS > aM) {
-    alert("Scores cannot exceed max values");
-    return;
-  }
-
-  // ===== CALCULATE FINAL GRADE =====
-  const finalGrade = ((qS / qM) * wQ + (eS / eM) * wE + (aS / aM) * wA).toFixed(2);
-  document.getElementById("final").textContent = finalGrade;
-
-  // ===== PUSH TO SESSION STORAGE =====
-  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-
-  // Remove any previous grade for the same subject (optional, avoids duplicates)
-  temp.grades = temp.grades.filter(g => g.subject !== subject);
-
-  // Add the new grade
-  temp.grades.push({
-    subject: subject,
-    grade: Number(finalGrade)
+    list.innerHTML += `
+      <div class="subject-item">
+        <strong>${g.subject || "Unnamed Subject"}</strong> - Grade: ${Number(g.grade || 0).toFixed(2)}%
+        <button onclick="deleteTempSubject(${i})">Delete</button>
+      </div>
+    `;
   });
 
-  // Calculate total grading
-  const gradingTotal = temp.grades.reduce((sum, g) => sum + g.grade, 0);
+  avg.textContent = (total / temp.grades.length).toFixed(2);
+}
 
-  // Save back to sessionStorage
+// ----------------- DELETE SUBJECT FROM TEMP -----------------
+function deleteTempSubject(index) {
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
+  if (!temp || !temp.grades) return;
+
+  temp.grades.splice(index, 1);
+
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
-  sessionStorage.setItem("gradingTotal", JSON.stringify(gradingTotal));
+  loadTempSummary();
+}
 
-  // ===== SAVE TO FIREBASE =====
-  try {
-    await set(ref(db, `grades/${currentUserId}/${subject}`), {
-      subject,
-      quiz: qS,
-      quizMax: qM,
-      exam: eS,
-      examMax: eM,
-      attendance: aS,
-      attendanceMax: aM,
-      overall: Number(finalGrade)
-    });
-    alert("Grade calculated and added to Summary!");
-  } catch (err) {
-    console.error("Error saving grade:", err);
-    alert("Failed to save grade to Firebase. Check console for details.");
+// ----------------- SAVE STUDENT NAME -----------------
+function saveStudentName() {
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+  temp.name = studentNameInput.value.trim(); // allow blank
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
+
+  alert("Name saved (temp only).");
+}
+
+// ----------------- FINAL SAVE TO LOCALSTORAGE STUDENTS -----------------
+function saveToStudents() {
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
+  if (!temp || !temp.grades || temp.grades.length === 0) {
+    alert("No pending grades to save.");
+    return;
   }
+
+  temp.name = studentNameInput.value.trim();
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
+
+  students = JSON.parse(localStorage.getItem("students")) || [];
+
+  const newStudentData = {
+    name: temp.name || "",
+    subjects: temp.grades.map(g => ({
+      subject: g.subject || "Unnamed Subject",
+      grade: Number(g.grade || 0)
+    })),
+    overall: temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) / temp.grades.length
+  };
+
+  students.push(newStudentData);
+
+  localStorage.setItem("students", JSON.stringify(students));
+  sessionStorage.removeItem("tempSummary");
+
+  alert("Student saved permanently!");
+  loadTempSummary();
+}
+
+// ----------------- ADD SUBJECT (BACK TO GRADING) -----------------
+function addSubject() {
+  window.location.href = "grading.html";
 }
