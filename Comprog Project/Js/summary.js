@@ -1,7 +1,3 @@
-// ================= FIREBASE =================
-import { auth, db } from "./firebase.js";
-import { ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
 // ================= MENU + PROFILE =================
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
@@ -117,53 +113,13 @@ function deleteTempSubject(index) {
 }
 
 // ----------------- SAVE STUDENT NAME -----------------
-// ----------------- FINAL SAVE TO LOCALSTORAGE STUDENTS + FIREBASE -----------------
-async function saveToStudents() {
-  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
-  if (!temp || !temp.grades || temp.grades.length === 0) {
-    alert("No pending grades to save.");
-    return;
-  }
-
-  // Update temp name
-  temp.name = studentNameInput.value.trim();
+function saveStudentName() {
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+  temp.name = studentNameInput.value.trim(); // allow blank
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
-  // Load existing students from localStorage
-  let students = JSON.parse(localStorage.getItem("students")) || [];
-
-  const newStudentData = {
-    name: temp.name || "",
-    subjects: temp.grades.map(g => ({
-      subject: g.subject || "Unnamed Subject",
-      grade: Number(g.grade || 0)
-    })),
-    overall: temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) / temp.grades.length
-  };
-
-  // Add new student to localStorage
-  students.push(newStudentData);
-  localStorage.setItem("students", JSON.stringify(students));
-
-  // ====== SAVE TO FIREBASE ======
-  // Only save if a user is logged in
-  if (auth.currentUser) {
-    try {
-      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-      console.log("Student saved to Firebase!");
-    } catch (err) {
-      console.error("Failed to save students to Firebase:", err);
-      alert("Failed to save to your account");
-    }
-  }
-
-  // Remove tempSummary after saving
-  sessionStorage.removeItem("tempSummary");
-
-  alert("Student saved permanently locally and in your account!");
-  loadTempSummary();
+  alert("Name saved (temp only).");
 }
-
 
 // ----------------- FINAL SAVE TO LOCALSTORAGE STUDENTS -----------------
 function saveToStudents() {
@@ -200,4 +156,3 @@ function saveToStudents() {
 function addSubject() {
   window.location.href = "grading.html";
 }
-
