@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// ================= SUMMARY.JS =================
+// ================= SUMMARY =================
 let students = [];
 let studentNameInput;
 let list;
@@ -68,12 +68,14 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTempSummary();
 });
 
-// ----------------- LOAD TEMP SUMMARY (PREVIEW ONLY) -----------------
+// ----------------- LOAD TEMP SUMMARY (SESSION STORAGE) -----------------
 function loadTempSummary() {
-  const temp = JSON.parse(localStorage.getItem("tempSummary"));
+  // USE sessionStorage here to match grading.js
+  const temp = JSON.parse(sessionStorage.getItem("tempSummary"));
 
   list.innerHTML = "";
   avg.textContent = "0.00";
+  if (!studentNameInput) return;
   studentNameInput.value = "";
 
   if (!temp || !temp.grades || temp.grades.length === 0) {
@@ -99,43 +101,38 @@ function loadTempSummary() {
   avg.textContent = (total / temp.grades.length).toFixed(2);
 }
 
-// ----------------- DELETE SUBJECT FROM TEMP ONLY -----------------
+// ----------------- DELETE SUBJECT FROM TEMP -----------------
 function deleteTempSubject(index) {
-  let temp = JSON.parse(localStorage.getItem("tempSummary"));
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
   if (!temp || !temp.grades) return;
 
   temp.grades.splice(index, 1);
 
-  localStorage.setItem("tempSummary", JSON.stringify(temp));
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
   loadTempSummary();
 }
 
-// ----------------- SAVE STUDENT NAME (TEMP ONLY) -----------------
+// ----------------- SAVE STUDENT NAME -----------------
 function saveStudentName() {
-  let temp = JSON.parse(localStorage.getItem("tempSummary")) || { name: "", grades: [] };
-
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
   temp.name = studentNameInput.value.trim(); // allow blank
-  localStorage.setItem("tempSummary", JSON.stringify(temp));
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
-  alert("Name saved in Summary (temp only).");
+  alert("Name saved (temp only).");
 }
 
-// ----------------- FINAL SAVE (TEMP -> STUDENTS) -----------------
+// ----------------- FINAL SAVE TO LOCALSTORAGE STUDENTS -----------------
 function saveToStudents() {
-  let temp = JSON.parse(localStorage.getItem("tempSummary"));
-
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
   if (!temp || !temp.grades || temp.grades.length === 0) {
     alert("No pending grades to save.");
     return;
   }
 
-  // Always update temp name before saving
   temp.name = studentNameInput.value.trim();
-  localStorage.setItem("tempSummary", JSON.stringify(temp));
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
   students = JSON.parse(localStorage.getItem("students")) || [];
-
-  const studentIndex = localStorage.getItem("editStudentIndex");
 
   const newStudentData = {
     name: temp.name || "",
@@ -143,32 +140,19 @@ function saveToStudents() {
       subject: g.subject || "Unnamed Subject",
       grade: Number(g.grade || 0)
     })),
-    overall: temp.grades.reduce((a, b) => a + Number(b.grade || 0), 0) / temp.grades.length
+    overall: temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) / temp.grades.length
   };
 
-  // If editing existing student → overwrite
-  if (studentIndex !== null && students[studentIndex]) {
-    students[studentIndex] = newStudentData;
-    alert("Student updated!");
-  } else {
-    // Otherwise create new student
-    students.push(newStudentData);
-    alert("New student saved!");
-  }
+  students.push(newStudentData);
 
   localStorage.setItem("students", JSON.stringify(students));
+  sessionStorage.removeItem("tempSummary");
 
-  // Clear tempSummary after saving
-  localStorage.removeItem("tempSummary");
-
-  // Clear edit mode after saving
-  localStorage.removeItem("editStudentIndex");
-  localStorage.removeItem("editSubjectIndex");
-
+  alert("Student saved permanently!");
   loadTempSummary();
 }
 
-// ----------------- ADD SUBJECT (GO TO GRADING) -----------------
+// ----------------- ADD SUBJECT (BACK TO GRADING) -----------------
 function addSubject() {
   window.location.href = "grading.html";
 }
