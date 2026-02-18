@@ -1,3 +1,7 @@
+// ================= FIREBASE =================
+import { auth, db } from "./firebase.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
 // ================= MENU + PROFILE =================
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
@@ -31,29 +35,205 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ======= LOGOUT (summary-style) =======
+
 function logout() {
-  // Remove local user info
-  localStorage.removeItem("loggedInUser");
-  // Redirect to login
-  window.location.href = "login.html";
+  if (auth.currentUser) {
+    auth.signOut()
+      .then(() => window.location.href = "login.html")
+      .catch(err => console.error("Logout failed:", err));
+  } else {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+  }
 }
 
-// ======= LOAD USER DISPLAY (summary-style) =======
-document.addEventListener("DOMContentLoaded", () => {
-  const user = localStorage.getItem("loggedInUser");
+// ================= STUDENTS =================
+let students = [];
 
-  if (!userDisplay) return; // skip if page has no menu
 
+
+
+// ----------------- AUTH + LOAD -----------------
+auth.onAuthStateChanged(async (user) => {
   if (user) {
-    userDisplay.innerText = user.replace("@gmail.com", "");
+    if (userDisplay) {
+      userDisplay.innerText = user.email.split("@")[0];
+      userDisplay.style.display = "block";
+    }
     if (loginBtn) loginBtn.style.display = "none";
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
+
+    // Merge summary localStorage into Firebase for this user
+    setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
   } else {
-    userDisplay.style.display = "none";
-    if (loginBtn) loginBtn.style.display = "block";
-    if (registerBtn) registerBtn.style.display = "block";
-    if (logoutBtn) logoutBtn.style.display = "none";
+    // Offline / localStorage fallback
+    const localUser = localStorage.getItem("loggedInUser");
+    if (localUser) {
+      userDisplay.innerText = localUser.replace("@gmail.com", "");
+      userDisplay.style.display = "block";
+      if (loginBtn) loginBtn.style.display = "none";
+      if (registerBtn) registerBtn.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "block";
+    } else {
+      userDisplay.style.display = "none";
+      if (loginBtn) loginBtn.style.display = "block";
+      if (registerBtn) registerBtn.style.display = "block";
+      if (logoutBtn) logoutBtn.style.display = "none";
+    }
+    loadStudentsFromLocal();
   }
 });
+
+// ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
+async function uploadSummaryLocalToFirebase(uid) {
+  try {
+    const snapshot = await get(ref(db, `users/${uid}/students`));
+    const cloudStudents = snapshot.exists() ? snapshot.val() : [];
+
+    const localStudents = JSON.parse(localStorage.getItem("students")) || [];
+    let merged = [...cloudStudents];
+
+    localStudents.forEach(local => {
+      const exists = merged.some(f =>
+        f.name === local.name &&
+        JSON.stringify(f.subjects) === JSON.stringify(local.subjects)
+      );
+      if (!exists) merged.push(local);
+    });
+
+    students = merged;
+
+    await set(ref(db, `users/${uid}/students`), students);
+
+    localStorage.setItem("studentsSynced", "true");
+    localStorage.setItem("students", JSON.stringify(students));
+
+    renderStudents();
+  } catch (err) {
+    console.error("Firebase upload failed, using offline:", err);
+    loadStudentsFromLocal();
+  }
+}
+
+// ----------------- LOAD FROM LOCAL -----------------
+function loadStudentsFromLocal() {
+  students = JSON.parse(localStorage.getItem("students")) || [];
+  renderStudents();
+}
+
+// ----------------- RENDER STUDENTS -----------------
+function renderStudents() {
+  const container = document.getElementById("studentContainer");
+  if (!container) return;
+
+  container.innerHTML = "";
+  students = students || [];
+
+  if (students.length === 0) {
+    container.innerHTML = "<p>No students yet.</p>";
+    return;
+  }
+
+  students.forEach((student, si) => {
+    let studentHTML = `
+      <div class="student-card">
+        <button class="close-student" onclick="deleteStudent(${si})">X</button>
+        <h3>${student.name || ""}</h3>
+        <p><strong>Overall:</strong> ${(student.overall || 0).toFixed(2)}%</p>
+        <button class="add-subject-btn" onclick="addSubjectToStudent(${si})">Add Subject</button>
+        <ul class="subject-list">
+    `;
+
+    student.subjects?.forEach((sub, subi) => {
+      studentHTML += `
+        <li class="subject-item">
+          ${sub.subject || "Unnamed Subject"}: ${(sub.grade || 0).toFixed(2)}%
+          <div class="subject-buttons">
+            <button onclick="editSubject(${si}, ${subi})">Edit</button>
+            <button onclick="deleteSubject(${si}, ${subi})">Delete</button>
+          </div>
+        </li>
+      `;
+    });
+
+    studentHTML += "</ul></div>";
+    container.innerHTML += studentHTML;
+  });
+}
+
+// ----------------- EDIT / DELETE / ADD -----------------
+function editSubject(studentIndex, subjectIndex) {
+  localStorage.setItem("editStudentIndex", studentIndex);
+  localStorage.setItem("editSubjectIndex", subjectIndex);
+  localStorage.setItem("studentsSynced", "false");
+  window.location.href = "grading.html";
+}
+
+async function deleteSubject(studentIndex, subjectIndex) {
+  if (!students[studentIndex] || !students[studentIndex].subjects[subjectIndex]) return;
+
+  students[studentIndex].subjects.splice(subjectIndex, 1);
+
+  if (!students[studentIndex].subjects.length) {
+    students.splice(studentIndex, 1);
+    alert("Student removed (no subjects left)");
+  } else {
+    students[studentIndex].overall =
+      students[studentIndex].subjects.reduce((a, b) => a + Number(b.grade || 0), 0) /
+      students[studentIndex].subjects.length;
+  }
+
+  localStorage.setItem("students", JSON.stringify(students));
+  localStorage.setItem("studentsSynced", "false");
+
+  if (auth.currentUser) {
+    await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+  }
+
+  renderStudents();
+}
+
+async function deleteStudent(studentIndex) {
+  if (!students[studentIndex]) return;
+
+  if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
+    students.splice(studentIndex, 1);
+
+    localStorage.setItem("students", JSON.stringify(students));
+    localStorage.setItem("studentsSynced", "false");
+
+    if (auth.currentUser) {
+      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+    }
+
+    renderStudents();
+  }
+}
+
+function addSubjectToStudent(studentIndex) {
+  localStorage.setItem("editStudentIndex", studentIndex);
+  localStorage.removeItem("editSubjectIndex");
+  localStorage.setItem("studentsSynced", "false");
+  window.location.href = "grading.html";
+}
+
+function addNewStudent() {
+  localStorage.removeItem("editStudentIndex");
+  localStorage.removeItem("editSubjectIndex");
+  localStorage.removeItem("tempSummary");
+  localStorage.setItem("studentsSynced", "false");
+  window.location.href = "grading.html";
+}
+
+// ================= EXPORT GLOBAL FUNCTIONS =================
+// make functions callable from HTML buttons
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+window.toggleProfile = toggleProfile;
+window.logout = logout;
+window.editSubject = editSubject;
+window.deleteSubject = deleteSubject;
+window.deleteStudent = deleteStudent;
+window.addSubjectToStudent = addSubjectToStudent;
+window.addNewStudent = addNewStudent;
