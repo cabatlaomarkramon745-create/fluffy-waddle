@@ -50,6 +50,13 @@ function loadTempSummary() {
   avg.textContent = (total / temp.grades.length).toFixed(2);
 }
 
+const totalDiv = document.getElementById("totalGrades");
+  if (totalDiv) {
+    const gradingTotal = JSON.parse(sessionStorage.getItem("gradingTotal")) || 0;
+    totalDiv.textContent = `Total Grading: ${gradingTotal.toFixed(2)}`;
+  }
+}
+
 // Delete single subject
 function deleteTempSubject(index) {
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
