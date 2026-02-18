@@ -34,6 +34,7 @@ document.addEventListener("click", (e) => {
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUserId = user.uid;
+
     const userDisplay = document.getElementById("userDisplay");
     userDisplay.innerText = user.email.split("@")[0];
     userDisplay.style.display = "block";
@@ -45,7 +46,6 @@ onAuthStateChanged(auth, async (user) => {
     // Load saved inputs if any
     loadSavedInputs();
     loadQuizTotals();
-
   } else {
     currentUserId = null;
     document.getElementById("userDisplay").style.display = "none";
@@ -81,27 +81,19 @@ function validateGradingInputs() {
   ];
 
   let firstInvalid = null;
-  const lettersOnly = /^[A-Za-z\s]+$/; // The rule: Letters and spaces only
 
   fields.forEach(f => {
     const el = document.getElementById(f.id);
     el.classList.remove("input-error");
-    const val = el.value.trim();
 
-    // Check 1: Is it empty?
-    if (!val) {
+    if (!el.value.trim()) {
       el.classList.add("input-error");
-      if (!firstInvalid) firstInvalid = { ...f, msg: `${f.name} is required` };
-    } 
-    // Check 2: If it's the subject, does it follow the letter rule?
-    else if (f.id === "subject" && !lettersOnly.test(val)) {
-      el.classList.add("input-error");
-      if (!firstInvalid) firstInvalid = { ...f, msg: "Subject must only contain letters" };
+      if (!firstInvalid) firstInvalid = f;
     }
   });
 
   if (firstInvalid) {
-    alert(firstInvalid.msg);
+    alert(`${firstInvalid.name} is required`);
     document.getElementById(firstInvalid.id).focus();
     return false;
   }
@@ -110,7 +102,6 @@ function validateGradingInputs() {
 }
 
 // ===== CALCULATE FINAL GRADE =====
-
 async function calculate() {
   if (!validateGradingInputs()) return;
   if (!currentUserId) {
@@ -140,24 +131,8 @@ async function calculate() {
     return;
   }
 
-  const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
+  const finalGrade = ((qS / qM) * wQ + (eS / eM) * wE + (aS / aM) * wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
-
-  // ===== PUSH TO SUMMARY (SESSION STORAGE) =====
-  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-
-  // Add the new grade once
-  temp.grades.push({
-    subject: subject,
-    grade: Number(finalGrade)
-  });
-
-  // Save total of grading
-  const gradingTotal = temp.grades.reduce((sum, g) => sum + g.grade, 0);
-  sessionStorage.setItem("gradingTotal", JSON.stringify(gradingTotal));
-
-  // Save back tempSummary
-  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
   // ===== SAVE TO FIREBASE =====
   try {
@@ -169,30 +144,15 @@ async function calculate() {
       examMax: eM,
       attendance: aS,
       attendanceMax: aM,
+      wQuiz: wQ,
+      wExam: wE,
+      wAttend: wA,
       overall: Number(finalGrade)
     });
-    alert("Grade calculated and added to Summary!");
+    alert("Grade saved to Firebase!");
   } catch (err) {
     console.error("Error saving grade:", err);
-  }
-}
-
-
-  // ===== SAVE TO FIREBASE (Already existing) =====
-  try {
-    await set(ref(db, `grades/${currentUserId}/${subject}`), {
-      subject,
-      quiz: qS,
-      quizMax: qM,
-      exam: eS,
-      examMax: eM,
-      attendance: aS,
-      attendanceMax: aM,
-      overall: Number(finalGrade)
-    });
-    alert("Grade calculated and added to Summary!");
-  } catch (err) {
-    console.error("Error saving grade:", err);
+    alert("Failed to save grade");
   }
 }
 
@@ -233,11 +193,4 @@ function loadQuizTotals() {
 
 // ===== EXPORT FUNCTIONS FOR HTML =====
 window.calculate = calculate;
-window.saveCurrentInputs = saveCurrentInputs;
-window.loadSavedInputs = loadSavedInputs;
-
-// ===== INITIAL LOAD =====
-window.addEventListener("DOMContentLoaded", () => {
-  loadSavedInputs();
-  loadQuizTotals();
-});
+window.saveCurrentI
