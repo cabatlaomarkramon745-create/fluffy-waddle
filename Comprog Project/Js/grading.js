@@ -110,6 +110,7 @@ function validateGradingInputs() {
 }
 
 // ===== CALCULATE FINAL GRADE =====
+
 async function calculate() {
   if (!validateGradingInputs()) return;
   if (!currentUserId) {
@@ -142,7 +143,19 @@ async function calculate() {
   const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== SAVE TO FIREBASE =====
+  // ===== NEW: PUSH TO SUMMARY (SESSION STORAGE) =====
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+  
+  // Add the new grade to the list
+  temp.grades.push({ 
+    subject: subject, 
+    grade: Number(finalGrade) 
+  });
+  
+  // Save it so the Summary Page can see it
+  sessionStorage.setItem("tempSummary", JSON.stringify(temp));
+
+  // ===== SAVE TO FIREBASE (Already existing) =====
   try {
     await set(ref(db, `grades/${currentUserId}/${subject}`), {
       subject,
@@ -152,15 +165,11 @@ async function calculate() {
       examMax: eM,
       attendance: aS,
       attendanceMax: aM,
-      wQuiz: wQ,
-      wExam: wE,
-      wAttend: wA,
       overall: Number(finalGrade)
     });
-    alert("Grade saved to Firebase!");
+    alert("Grade calculated and added to Summary!");
   } catch (err) {
     console.error("Error saving grade:", err);
-    alert("Failed to save grade");
   }
 }
 
