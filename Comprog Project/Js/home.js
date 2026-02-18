@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const registerBtn = document.getElementById("registerBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  // Menu
+  // Menu functions
   window.openMenu = () => {
     sideMenu.style.left = "0";
     overlay.style.display = "block";
@@ -36,13 +36,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Format email to name
+  // Format email to display name
   const formatUserName = (email) => {
     if (!email) return "Guest";
     return email.split("@")[0];
   };
 
-  // Firebase auth check
+  // Firestore: check if user is logged in
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const email = user.email;
@@ -51,6 +51,19 @@ document.addEventListener("DOMContentLoaded", () => {
       loginBtn.style.display = "none";
       registerBtn.style.display = "none";
       logoutBtn.style.display = "block";
+
+      // OPTIONAL: load extra info about user from Firestore
+      try {
+        const userDoc = await getDoc(doc(db, "students", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          console.log("Student data:", data);
+          // e.g., display student's full name somewhere
+        }
+      } catch (err) {
+        console.error("Error loading student data:", err);
+      }
+
     } else {
       userNameDisplay.innerText = "Guest";
       loginBtn.style.display = "block";
@@ -67,8 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
       loginBtn.style.display = "block";
       registerBtn.style.display = "block";
       logoutBtn.style.display = "none";
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
