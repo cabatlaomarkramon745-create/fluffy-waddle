@@ -36,7 +36,7 @@
     <a href="home.html">🏠 Home</a>
     <a href="students.html">📄 Students</a>
     <a href="grading.html">🧮 Grading</a>
-    <a href="settings.html">⚙ Settings</a>
+  
   </div>
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
@@ -89,7 +89,7 @@
     </div>
 
     <!-- CALCULATE -->
-   <button id="calculateBtn" onclick="calculate()">Calculate</button>
+   <button onclick="calculate()">Calculate & Add to Summary</button>
 <h2 id="final-grade" class="final-grade">Final Grade: <span id="final">0.00</span>%</h2>
 <button id="viewSubjectsBtn" onclick="location.href='summary.html'">View All Subjects</button>
 
@@ -97,7 +97,6 @@
   </div>
 
   <!-- JS -->
-  <script type="module" src="Js/authGuard.js"></script>
   <script type="module" src="Js/grading.js"></script>
 </body>
 </html>
