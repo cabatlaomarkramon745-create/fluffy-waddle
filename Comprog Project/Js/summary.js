@@ -36,6 +36,9 @@ async function calculate() {
   // ===== PUSH TO SESSION STORAGE =====
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
 
+  // Remove any previous grade for the same subject (optional, avoids duplicates)
+  temp.grades = temp.grades.filter(g => g.subject !== subject);
+
   // Add the new grade
   temp.grades.push({
     subject: subject,
@@ -45,7 +48,7 @@ async function calculate() {
   // Calculate total grading
   const gradingTotal = temp.grades.reduce((sum, g) => sum + g.grade, 0);
 
-  // Save to sessionStorage
+  // Save back to sessionStorage
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
   sessionStorage.setItem("gradingTotal", JSON.stringify(gradingTotal));
 
@@ -64,5 +67,6 @@ async function calculate() {
     alert("Grade calculated and added to Summary!");
   } catch (err) {
     console.error("Error saving grade:", err);
+    alert("Failed to save grade to Firebase. Check console for details.");
   }
 }
