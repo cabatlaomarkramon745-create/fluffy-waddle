@@ -143,29 +143,40 @@ async function calculate() {
   const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== NEW: PUSH TO SUMMARY (SESSION STORAGE) =====
+  // ===== PUSH TO SUMMARY (SESSION STORAGE) =====
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
 
-  // Save total of grading (sum of all subjects in tempSummary)
-let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-
-// Add new grade to temp.grades (already exists in your code)
-temp.grades.push({
-  subject: subject,
-  grade: Number(finalGrade)
-});
-
-// Save back tempSummary
-sessionStorage.setItem("tempSummary", JSON.stringify(temp));
-
-  // Add the new grade to the list
-  temp.grades.push({ 
-    subject: subject, 
-    grade: Number(finalGrade) 
+  // Add the new grade once
+  temp.grades.push({
+    subject: subject,
+    grade: Number(finalGrade)
   });
-  
-  // Save it so the Summary Page can see it
+
+  // Save total of grading
+  const gradingTotal = temp.grades.reduce((sum, g) => sum + g.grade, 0);
+  sessionStorage.setItem("gradingTotal", JSON.stringify(gradingTotal));
+
+  // Save back tempSummary
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
+
+  // ===== SAVE TO FIREBASE =====
+  try {
+    await set(ref(db, `grades/${currentUserId}/${subject}`), {
+      subject,
+      quiz: qS,
+      quizMax: qM,
+      exam: eS,
+      examMax: eM,
+      attendance: aS,
+      attendanceMax: aM,
+      overall: Number(finalGrade)
+    });
+    alert("Grade calculated and added to Summary!");
+  } catch (err) {
+    console.error("Error saving grade:", err);
+  }
+}
+
 
   // ===== SAVE TO FIREBASE (Already existing) =====
   try {
