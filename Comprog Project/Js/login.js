@@ -1,5 +1,5 @@
 import { auth } from "./firebase.js";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -8,15 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const passwordInput = document.getElementById("password");
     const messageDiv = document.getElementById("message");
 
-    // Redirect if already logged in
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            console.log("User already logged in:", user.email);
-            window.location.href = "home.html"; 
-        }
-    });
-
-    // Login Function
     if (loginBtn) {
         loginBtn.addEventListener("click", async () => {
             const email = emailInput.value.trim();
@@ -31,18 +22,19 @@ document.addEventListener("DOMContentLoaded", () => {
             loginBtn.textContent = "Logging in...";
 
             try {
+                // Attempt to log in
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 console.log("Login successful:", userCredential.user.email);
+
                 showMessage("✅ Login successful! Redirecting...", "green");
 
-                // Optional manual redirect if onAuthStateChanged is delayed
-                setTimeout(() => {
-                    window.location.href = "home.html";
-                }, 500); 
+                // Redirect immediately after login
+                window.location.href = "home.html";
 
             } catch (error) {
                 console.error(error);
                 handleError(error);
+
                 loginBtn.disabled = false;
                 loginBtn.textContent = "Login";
             }
