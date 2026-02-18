@@ -1,25 +1,63 @@
-// Import the functions you need from Firebase SDK
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ===== FIREBASE CONFIG =====
-const firebaseConfig = {
-  apiKey: "AIzaSyDDNz-1PjZE3AJbB6LlkMGiSrzjGyPAqho",
-  authDomain: "comprog-project-account.firebaseapp.com",
-  databaseURL: "https://comprog-project-account-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "comprog-project-account",
-  storageBucket: "comprog-project-account.firebasestorage.app",
-  messagingSenderId: "256831010069",
-  appId: "1:256831010069:web:86b0314ab907232a7ba51c",
-  measurementId: "G-1BH1RCXW7Q"
-};
+document.addEventListener("DOMContentLoaded", () => {
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  const sideMenu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("overlay");
+  const profileDropdown = document.getElementById("profileDropdown");
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const studentCount = document.getElementById("studentCount");
+  const averageGrade = document.getElementById("averageGrade");
 
-// ===== EXPORT AUTH & DB =====
-export const auth = getAuth(app);
-export const db = getDatabase(app);
+  // ===== MENU FUNCTIONS =====
+  window.openMenu = () => { sideMenu.style.left="0"; overlay.style.display="block"; };
+  window.closeMenu = () => { sideMenu.style.left="-250px"; overlay.style.display="none"; };
+  window.toggleProfile = (e) => { e.stopPropagation(); profileDropdown.style.display=profileDropdown.style.display==="block"?"none":"block"; };
+  document.addEventListener("click", e=>{if(!e.target.closest(".profile-area")) profileDropdown.style.display="none";});
+
+  // ===== Firebase Auth & Realtime DB =====
+  onAuthStateChanged(auth, async (user)=>{
+    if(user){
+      const name = user.email.split("@")[0];
+      userNameDisplay.innerText = name;
+
+      loginBtn.style.display="none";
+      registerBtn.style.display="none";
+      logoutBtn.style.display="block";
+
+      // Fetch students
+      try{
+        const dbRef = ref(db,"students");
+        const snapshot = await get(child(dbRef,""));
+        let students = snapshot.exists()?Object.values(snapshot.val()):[];
+
+        studentCount.innerText = students.length;
+
+        if(students.length>0){
+          let total=0, graded=0;
+          students.forEach(s=>{ if(typeof s.overall==="number"){ total+=s.overall; graded++; }});
+          if(graded>0) averageGrade.innerText=(total/graded).toFixed(1);
+        }
+
+      }catch(err){ console.error("Error fetching students:", err);}
+    } else {
+      userNameDisplay.innerText="Guest";
+      loginBtn.style.display="block";
+      registerBtn.style.display="block";
+      logoutBtn.style.display="none";
+    }
+  });
+
+  // ===== LOGOUT =====
+  window.logout = async ()=>{
+    try{
+      await signOut(auth);
+      window.location.href="login.html";
+    }catch(err){console.error(err);}
+  };
+});
