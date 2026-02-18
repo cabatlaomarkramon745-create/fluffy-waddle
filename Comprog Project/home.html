@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student System</title>
-  <link rel="stylesheet" href="css/stylehome.css">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
 
@@ -12,15 +12,9 @@
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
 
-    <div class="search-wrapper">
-      <input type="text" class="search-bar" placeholder="Search students...">
-    </div>
-
     <div class="profile-area">
       <div class="profile-icon" onclick="toggleProfile(event)">
-        <img src="images/profile-icon.png" 
-             alt="Profile" 
-             onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
+        <img src="images/profile-icon.png" alt="Profile" onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
       </div>
       <div class="profile-dropdown" id="profileDropdown">
         <a id="userNameDisplay">Guest</a>
@@ -34,10 +28,9 @@
   <!-- Side menu -->
   <div class="side-menu" id="sideMenu">
     <span class="close-btn" onclick="closeMenu()">✖</span>
-    <a href="home.html">🏠 Home</a>
+    <a href="dashboard.html">🏠 Dashboard</a>
     <a href="students.html">📄 Students</a>
     <a href="grading.html">🧮 Grading</a>
-    <a href="settings.html">⚙ Settings</a>
   </div>
 
   <!-- Overlay -->
@@ -45,8 +38,17 @@
 
   <!-- Main content -->
   <div class="main-content">
-    <h1>Welcome, <span id="userNameDisplayMain">Guest</span></h1>
-    <h2>Let’s get started</h2>
+    <h1>Dashboard</h1>
+    <div class="stats-container">
+      <div class="stat-box">
+        <h2>Students</h2>
+        <p id="studentCount">0</p>
+      </div>
+      <div class="stat-box">
+        <h2>Average Grade</h2>
+        <p id="averageGrade">0.0</p>
+      </div>
+    </div>
 
     <div class="cards">
       <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
@@ -54,7 +56,6 @@
     </div>
   </div>
 
-  <!-- JS -->
-  <script type="module" src="Js/home.js" defer></script>
+  <script type="module" src="Js/home.js"></script>
 </body>
 </html>
