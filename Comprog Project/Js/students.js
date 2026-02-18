@@ -6,6 +6,10 @@ import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
+const userDisplay = document.getElementById("userDisplay");
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
 function openMenu() {
   if (!sideMenu || !overlay) return;
@@ -31,19 +35,16 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ===== LOGOUT =====
 function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "login.html";
-  }).catch(err => console.error("Logout failed:", err));
+  auth.signOut()
+    .then(() => window.location.href = "login.html")
+    .catch(err => console.error("Logout failed:", err));
 }
 
-// ================= LOAD USER DISPLAY =================
-const userDisplay = document.getElementById("userDisplay");
-const loginBtn = document.getElementById("loginBtn");
-const registerBtn = document.getElementById("registerBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+// ================= STUDENTS =================
+let students = [];
 
+// ----------------- AUTH + LOAD -----------------
 auth.onAuthStateChanged(async (user) => {
   if (user) {
     if (userDisplay) {
@@ -54,70 +55,56 @@ auth.onAuthStateChanged(async (user) => {
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
 
-    // Load students with merge from localStorage
-    setTimeout(() => loadStudentsFromFirebase(user.uid), 200);
+    // Load students from Firebase and merge localStorage from summary
+    setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
   } else {
     if (userDisplay) userDisplay.style.display = "none";
     if (loginBtn) loginBtn.style.display = "block";
     if (registerBtn) registerBtn.style.display = "block";
     if (logoutBtn) logoutBtn.style.display = "none";
 
-    // Load students from localStorage only if no user
+    // Offline-only
     loadStudentsFromLocal();
   }
 });
 
-// ================= STUDENTS =================
-let students = [];
-
-// ----------------- LOAD STUDENTS FROM FIREBASE (MERGE LOCAL) -----------------
-async function loadStudentsFromFirebase(uid) {
+// ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
+async function uploadSummaryLocalToFirebase(uid) {
   try {
-    const cloudSnap = await get(ref(db, `users/${uid}/students`));
-    let cloudStudents = cloudSnap.exists() ? cloudSnap.val() : [];
+    // Firebase students first
+    const snapshot = await get(ref(db, `users/${uid}/students`));
+    const cloudStudents = snapshot.exists() ? snapshot.val() : [];
 
-    let localStudents = JSON.parse(localStorage.getItem("students")) || [];
-    let synced = localStorage.getItem("studentsSynced") === "true";
+    // LocalStorage from summary
+    const localStudents = JSON.parse(localStorage.getItem("students")) || [];
+    let merged = [...cloudStudents];
 
-    // ===== IF LOCAL DATA NOT YET UPLOADED =====
-    if (!synced && localStudents.length > 0) {
-      console.log("Uploading local students to account...");
+    // Add local students if they don't already exist in Firebase
+    localStudents.forEach(local => {
+      const exists = merged.some(f =>
+        f.name === local.name &&
+        JSON.stringify(f.subjects) === JSON.stringify(local.subjects)
+      );
+      if (!exists) merged.push(local);
+    });
 
-      const merged = [...cloudStudents];
+    students = merged;
 
-      localStudents.forEach(local => {
-        const exists = merged.some(c =>
-          c.name === local.name &&
-          JSON.stringify(c.subjects) === JSON.stringify(local.subjects)
-        );
+    // Save merged permanently to Firebase
+    await set(ref(db, `users/${uid}/students`), students);
 
-        if (!exists) merged.push(local);
-      });
-
-      students = merged;
-
-      // PERMANENT SAVE TO ACCOUNT
-      await set(ref(db, `users/${uid}/students`), students);
-
-      // mark as synced
-      localStorage.setItem("studentsSynced", "true");
-      localStorage.setItem("students", JSON.stringify(students));
-
-    } else {
-      // normal load
-      students = cloudStudents;
-      localStorage.setItem("students", JSON.stringify(students));
-    }
+    // Clear localStorage flag so next summary additions can be uploaded again
+    localStorage.setItem("studentsSynced", "true");
+    localStorage.setItem("students", JSON.stringify(students));
 
     renderStudents();
-
   } catch (err) {
-    console.error("Firebase failed, using offline:", err);
+    console.error("Firebase upload failed, using offline:", err);
     loadStudentsFromLocal();
   }
 }
 
-// ----------------- LOAD STUDENTS FROM LOCALSTORAGE -----------------
+// ----------------- LOAD FROM LOCAL -----------------
 function loadStudentsFromLocal() {
   students = JSON.parse(localStorage.getItem("students")) || [];
   renderStudents();
@@ -129,10 +116,9 @@ function renderStudents() {
   if (!container) return;
 
   container.innerHTML = "";
+  students = students || [];
 
-  students = students || []; // do not delete empty students
-
-  if (!students.length) {
+  if (students.length === 0) {
     container.innerHTML = "<p>No students yet.</p>";
     return;
   }
@@ -168,7 +154,7 @@ function renderStudents() {
 function editSubject(studentIndex, subjectIndex) {
   localStorage.setItem("editStudentIndex", studentIndex);
   localStorage.setItem("editSubjectIndex", subjectIndex);
-  localStorage.setItem("studentsSynced", "false"); // new edits require resync
+  localStorage.setItem("studentsSynced", "false");
   window.location.href = "grading.html";
 }
 
@@ -197,12 +183,13 @@ async function deleteSubject(studentIndex, subjectIndex) {
   renderStudents();
 }
 
-// ----------------- DELETE WHOLE STUDENT -----------------
+// ----------------- DELETE STUDENT -----------------
 async function deleteStudent(studentIndex) {
   if (!students[studentIndex]) return;
 
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
+
     localStorage.setItem("students", JSON.stringify(students));
     localStorage.setItem("studentsSynced", "false");
 
@@ -217,7 +204,7 @@ async function deleteStudent(studentIndex) {
 // ----------------- ADD SUBJECT TO EXISTING STUDENT -----------------
 function addSubjectToStudent(studentIndex) {
   localStorage.setItem("editStudentIndex", studentIndex);
-  localStorage.removeItem("editSubjectIndex"); // new subject
+  localStorage.removeItem("editSubjectIndex");
   localStorage.setItem("studentsSynced", "false");
   window.location.href = "grading.html";
 }
@@ -227,6 +214,6 @@ function addNewStudent() {
   localStorage.removeItem("editStudentIndex");
   localStorage.removeItem("editSubjectIndex");
   localStorage.removeItem("tempSummary");
-  localStorage.setItem("studentsSynced", "false"); // important
+  localStorage.setItem("studentsSynced", "false");
   window.location.href = "grading.html";
 }
