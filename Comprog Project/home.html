@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Home</title>
   <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
@@ -28,7 +28,7 @@
   <!-- Side menu -->
   <div class="side-menu" id="sideMenu">
     <span class="close-btn" onclick="closeMenu()">✖</span>
-    <a href="dashboard.html">🏠 Home</a>
+    <a href="home.html">🏠 Home</a>
     <a href="students.html">📄 Students</a>
     <a href="grading.html">🧮 Grading</a>
   </div>
@@ -38,18 +38,7 @@
 
   <!-- Main content -->
   <div class="main-content">
-    <h1>Dashboard</h1>
-
-    <div class="stats-container">
-      <div class="stat-box">
-        <h2>Students</h2>
-        <p id="studentCount">0</p>
-      </div>
-      <div class="stat-box">
-        <h2>Average Grade</h2>
-        <p id="averageGrade">0.0</p>
-      </div>
-    </div>
+    <h1>Welcome, <span id="userNameDisplay">Guest</span></h1>
 
     <div class="cards">
       <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
@@ -57,6 +46,6 @@
     </div>
   </div>
 
-  <script type="module" src="Js/home.js"></script>
+  <script type="module" src="js/home.js"></script>
 </body>
 </html>
