@@ -82,6 +82,13 @@ function validateGradingInputs() {
 
   let firstInvalid = null;
 
+  // Regex to allow only letters (A-Z, a-z) and spaces
+  const lettersOnly = /^[A-Za-z\s]+$/;
+
+  for (const f of fields) {
+    const el = document.getElementById(f.id);
+    el.classList.remove("input-error");
+
   fields.forEach(f => {
     const el = document.getElementById(f.id);
     el.classList.remove("input-error");
