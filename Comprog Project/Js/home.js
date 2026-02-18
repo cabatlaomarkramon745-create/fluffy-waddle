@@ -1,71 +1,99 @@
-import { auth, db } from "./firebase.js";
+import { auth } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const userNameDisplay = document.getElementById("userNameDisplay");
-const logoutBtn = document.getElementById("logoutBtn");
-const studentCount = document.getElementById("studentCount");
-const averageGrade = document.getElementById("averageGrade");
+document.addEventListener("DOMContentLoaded", function () {
 
-// Handle Auth State
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // User is logged in
-        console.log("User detected:", user.email);
-        
-        // Use displayName if available, fallback to email prefix
-        const displayName = user.displayName || user.email.split("@")[0];
-        if(userNameDisplay) userNameDisplay.innerText = displayName;
+  const sideMenu = document.getElementById("sideMenu");
+  const overlay = document.getElementById("overlay");
+  const profileDropdown = document.getElementById("profileDropdown");
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-        // Load Data
-        loadDashboardData();
-    } else {
-        // User is NOT logged in - Redirect to login
-        window.location.href = "login.html";
+  // ===== MENU =====
+  window.openMenu = function () {
+    if (sideMenu && overlay) {
+      sideMenu.style.left = "0";
+      overlay.style.display = "block";
     }
+  };
+
+  window.closeMenu = function () {
+    if (sideMenu && overlay) {
+      sideMenu.style.left = "-250px";
+      overlay.style.display = "none";
+    }
+  };
+
+  window.toggleProfile = function (event) {
+    if (!profileDropdown) return;
+    event.stopPropagation();
+    profileDropdown.style.display =
+      profileDropdown.style.display === "block" ? "none" : "block";
+  };
+
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".profile-area") && profileDropdown) {
+      profileDropdown.style.display = "none";
+    }
+  });
+
+  // ===== AUTH =====
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Show logged-in user
+      if (userNameDisplay) userNameDisplay.innerText = formatUserName(user.email);
+
+      if (loginBtn) loginBtn.style.display = "none";
+      if (registerBtn) registerBtn.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "block";
+
+    } else {
+      // User not logged in -> redirect to login page
+      window.location.href = "login.html";
+    }
+  });
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+  }
+
+  // ===== STUDENT COUNT + AVERAGE =====
+  let students = JSON.parse(localStorage.getItem("students")) || [];
+
+  const studentCount = document.getElementById("studentCount");
+  if (studentCount) studentCount.innerText = students.length;
+
+  if (students.length > 0) {
+    let total = 0;
+    let graded = 0;
+
+    students.forEach(s => {
+      if (typeof s.overall === "number") {
+        total += s.overall;
+        graded++;
+      }
+    });
+
+    const averageGrade = document.getElementById("averageGrade");
+    if (averageGrade && graded > 0) {
+      averageGrade.innerText = (total / graded).toFixed(1);
+    }
+  }
+
 });
 
-// Fetch Dashboard Data
-async function loadDashboardData() {
-    try {
-        const dbRef = ref(db);
-        const snapshot = await get(child(dbRef, "students"));
-        
-        if (snapshot.exists()) {
-            const students = Object.values(snapshot.val());
-            
-            // Update UI
-            if(studentCount) studentCount.innerText = students.length;
-            
-            // Calculate Average
-            let total = 0, count = 0;
-            students.forEach(s => {
-                if (s.overall && !isNaN(s.overall)) {
-                    total += Number(s.overall);
-                    count++;
-                }
-            });
-
-            if (count > 0 && averageGrade) {
-                averageGrade.innerText = (total / count).toFixed(1);
-            }
-        } else {
-            if(studentCount) studentCount.innerText = "0";
-            if(averageGrade) averageGrade.innerText = "N/A";
-        }
-    } catch (error) {
-        console.error("Error fetching data:", error);
-    }
+// ===== FUNCTIONS =====
+function formatUserName(email) {
+  return email ? email.replace("@gmail.com", "") : "";
 }
 
-// Logout Function
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-        try {
-            await signOut(auth);
-            window.location.href = "login.html";
-        } catch (error) {
-            console.error("Logout failed", error);
-        }
-    });
+function logout() {
+  signOut(auth).then(() => {
+    console.log("User logged out");
+    window.location.href = "login.html";
+  }).catch((error) => {
+    console.error("Logout error:", error);
+  });
 }
