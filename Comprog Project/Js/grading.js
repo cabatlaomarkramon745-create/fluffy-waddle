@@ -155,10 +155,6 @@ temp.grades.push({
   grade: Number(finalGrade)
 });
 
-// --- NEW: Calculate total grades ---
-let totalGrade = temp.grades.reduce((sum, g) => sum + g.grade, 0);
-sessionStorage.setItem("gradingTotal", JSON.stringify(totalGrade));
-
 // Save back tempSummary
 sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
