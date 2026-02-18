@@ -81,25 +81,27 @@ function validateGradingInputs() {
   ];
 
   let firstInvalid = null;
-
-  // Regex to allow only letters (A-Z, a-z) and spaces
-  const lettersOnly = /^[A-Za-z\s]+$/;
-
-  for (const f of fields) {
-    const el = document.getElementById(f.id);
-    el.classList.remove("input-error");
+  const lettersOnly = /^[A-Za-z\s]+$/; // The rule: Letters and spaces only
 
   fields.forEach(f => {
     const el = document.getElementById(f.id);
     el.classList.remove("input-error");
-    if (!el.value.trim()) {
+    const val = el.value.trim();
+
+    // Check 1: Is it empty?
+    if (!val) {
       el.classList.add("input-error");
-      if (!firstInvalid) firstInvalid = f;
+      if (!firstInvalid) firstInvalid = { ...f, msg: `${f.name} is required` };
+    } 
+    // Check 2: If it's the subject, does it follow the letter rule?
+    else if (f.id === "subject" && !lettersOnly.test(val)) {
+      el.classList.add("input-error");
+      if (!firstInvalid) firstInvalid = { ...f, msg: "Subject must only contain letters" };
     }
   });
 
   if (firstInvalid) {
-    alert(`${firstInvalid.name} is required`);
+    alert(firstInvalid.msg);
     document.getElementById(firstInvalid.id).focus();
     return false;
   }
