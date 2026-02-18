@@ -41,14 +41,10 @@
   <div class="main-content">
     <h1>All Students</h1>
     <div id="studentContainer"></div>
-    <button class="add-new-student" onclick="
-      localStorage.removeItem('editStudentIndex');
-      localStorage.removeItem('editSubjectIndex');
-      localStorage.removeItem('tempSummary');
-      location.href='grading.html';
-    ">Add New Student</button>
+   <button class="add-new-student" onclick="addNewStudent()">Add New Student</button>
+
   </div>
 
-  <script src="js/students.js"></script>
+<script type="module" src="Js/students.js"></script>
 </body>
 </html>
