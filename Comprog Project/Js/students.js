@@ -35,7 +35,6 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ================= LOGOUT FUNCTION =================
 function logout() {
   if (auth.currentUser) {
     auth.signOut()
@@ -47,41 +46,40 @@ function logout() {
   }
 }
 
-// ================= LOAD USER DISPLAY =================
-document.addEventListener("DOMContentLoaded", () => {
-  if (!userDisplay) return;
+// ================= STUDENTS =================
+let students = [];
 
-  auth.onAuthStateChanged((user) => {
-    if (user) {
+// ----------------- AUTH + LOAD -----------------
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    if (userDisplay) {
       userDisplay.innerText = user.email.split("@")[0];
+      userDisplay.style.display = "block";
+    }
+    if (loginBtn) loginBtn.style.display = "none";
+    if (registerBtn) registerBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "block";
+
+    // Merge summary localStorage into Firebase for this user
+    setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
+  } else {
+    // Offline / localStorage fallback
+    const localUser = localStorage.getItem("loggedInUser");
+    if (localUser) {
+      userDisplay.innerText = localUser.replace("@gmail.com", "");
       userDisplay.style.display = "block";
       if (loginBtn) loginBtn.style.display = "none";
       if (registerBtn) registerBtn.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "block";
-
-      setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
     } else {
-      // fallback for offline users (summary-only)
-      const localUser = localStorage.getItem("loggedInUser");
-      if (localUser) {
-        userDisplay.innerText = localUser.replace("@gmail.com", "");
-        userDisplay.style.display = "block";
-        if (loginBtn) loginBtn.style.display = "none";
-        if (registerBtn) registerBtn.style.display = "none";
-        if (logoutBtn) logoutBtn.style.display = "block";
-      } else {
-        userDisplay.style.display = "none";
-        if (loginBtn) loginBtn.style.display = "block";
-        if (registerBtn) registerBtn.style.display = "block";
-        if (logoutBtn) logoutBtn.style.display = "none";
-      }
-      loadStudentsFromLocal();
+      userDisplay.style.display = "none";
+      if (loginBtn) loginBtn.style.display = "block";
+      if (registerBtn) registerBtn.style.display = "block";
+      if (logoutBtn) logoutBtn.style.display = "none";
     }
-  });
+    loadStudentsFromLocal();
+  }
 });
-
-// ================= STUDENTS =================
-let students = [];
 
 // ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
 async function uploadSummaryLocalToFirebase(uid) {
@@ -223,3 +221,15 @@ function addNewStudent() {
   localStorage.setItem("studentsSynced", "false");
   window.location.href = "grading.html";
 }
+
+// ================= EXPORT GLOBAL FUNCTIONS =================
+// make functions callable from HTML buttons
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+window.toggleProfile = toggleProfile;
+window.logout = logout;
+window.editSubject = editSubject;
+window.deleteSubject = deleteSubject;
+window.deleteStudent = deleteStudent;
+window.addSubjectToStudent = addSubjectToStudent;
+window.addNewStudent = addNewStudent;
