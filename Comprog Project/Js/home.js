@@ -1,62 +1,129 @@
-  import { auth } from "./firebase.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-    }
-  });
-
-import { auth } from "./firebase.js";
-  import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.href = "login.html";
-  });
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 document.addEventListener("DOMContentLoaded", function () {
 
+  // Elements
   const sideMenu = document.getElementById("sideMenu");
   const overlay = document.getElementById("overlay");
   const profileDropdown = document.getElementById("profileDropdown");
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const studentCount = document.getElementById("studentCount");
+  const averageGrade = document.getElementById("averageGrade");
 
-  // menu
+  // ===== MENU FUNCTIONS =====
+
+
+
+
+
+
   window.openMenu = function () {
-    sideMenu.style.left = "0";
-    overlay.style.display = "block";
-@@ -44,53 +31,73 @@ document.addEventListener("DOMContentLoaded", function () {
+    if (sideMenu && overlay) {
+      sideMenu.style.left = "0";
+      overlay.style.display = "block";
+    }
+  };
+
+  window.closeMenu = function () {
+    if (sideMenu && overlay) {
+      sideMenu.style.left = "-250px";
+      overlay.style.display = "none";
+    }
+  };
+
+  window.toggleProfile = function (event) {
+    event.stopPropagation();
+    if (profileDropdown) {
+      profileDropdown.style.display =
+        profileDropdown.style.display === "block" ? "none" : "block";
+    }
+  };
+
+  // Close profile dropdown if clicking outside
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".profile-area") && profileDropdown) {
+      profileDropdown.style.display = "none";
     }
   });
 
-  // login
-  let user = localStorage.getItem("loggedInUser");
+  // ===== FIREBASE USER STATE =====
 
-  if (user) {
-    document.getElementById("userNameDisplay").innerText = formatUserName(user);
 
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("registerBtn").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "block";
-  }
 
-  // hide user display if no user
-  if (!user) {
-    const userDisplay = document.getElementById("userDisplay");
-    if (userDisplay) userDisplay.style.display = "none";
-  }
 
-  // student count + average
-  let students = JSON.parse(localStorage.getItem("students")) || [];
 
-  const studentCount = document.getElementById("studentCount");
-  if (studentCount) studentCount.innerText = students.length;
 
-  if (students.length > 0) {
-    let total = 0;
-    let graded = 0;
 
-    students.forEach(s => {
-      if (typeof s.overall === "number") {   // FIXED (use overall not grade)
-        total += s.overall;
-        graded++;
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const email = user.email;
+      if (userNameDisplay) {
+        userNameDisplay.style.display = "inline";
+        userNameDisplay.innerText = formatUserName(email);
+      }
+
+      if (loginBtn) loginBtn.style.display = "none";
+      if (registerBtn) registerBtn.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "block";
+
+      // Fetch students from Firebase Realtime Database
+      const dbRef = ref(db, "students");
+      try {
+        const snapshot = await get(child(dbRef, ""));
+        let students = [];
+        if (snapshot.exists()) {
+
+          students = Object.values(snapshot.val());
+        }
+
+        if (studentCount) studentCount.innerText = students.length;
+
+        if (students.length > 0 && averageGrade) {
+          let total = 0;
+          let graded = 0;
+
+          students.forEach(s => {
+            if (typeof s.overall === "number") {
+              total += s.overall;
+              graded++;
+            }
+          });
+
+          if (graded > 0) {
+            averageGrade.innerText = (total / graded).toFixed(1);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching students:", err);
+      }
+
+    } else {
+      // No user logged in
+      if (userNameDisplay) userNameDisplay.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "none";
+      if (loginBtn) loginBtn.style.display = "block";
+      if (registerBtn) registerBtn.style.display = "block";
+    }
+  });
+
+  // ===== LOGOUT FUNCTION =====
+  window.logout = async function () {
+    try {
+      await signOut(auth);
+      window.location.href = "login.html";
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+});
+
+// ===== UTILITY =====
+function formatUserName(email) {
+  if (!email) return "Guest";
+  return email.replace("@gmail.com", "");
+}
