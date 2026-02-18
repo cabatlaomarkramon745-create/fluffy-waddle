@@ -1,100 +1,46 @@
-// ================= MENU + PROFILE =================
-const sideMenu = document.getElementById("sideMenu");
-const overlay = document.getElementById("overlay");
-const profileDropdown = document.getElementById("profileDropdown");
-
-function openMenu() {
-  if (!sideMenu || !overlay) return;
-  sideMenu.style.left = "0";
-  overlay.style.display = "block";
-}
-
-function closeMenu() {
-  if (!sideMenu || !overlay) return;
-  sideMenu.style.left = "-250px";
-  overlay.style.display = "none";
-}
-
-function toggleProfile(event) {
-  if (!profileDropdown) return;
-  event.stopPropagation();
-  profileDropdown.style.display =
-    profileDropdown.style.display === "block" ? "none" : "block";
-}
-
-document.addEventListener("click", function (e) {
-  if (!profileDropdown) return;
-  if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
-});
-
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-
-
-
-
-}
-
-// ================= LOAD USER DISPLAY =================
-document.addEventListener("DOMContentLoaded", function () {
-  let user = localStorage.getItem("loggedInUser");
-  const userDisplay = document.getElementById("userDisplay");
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  if (!userDisplay) return; // skip if page has no menu
-
-  if (user) {
-    userDisplay.innerText = user.replace("@gmail.com", "");
-    if (loginBtn) loginBtn.style.display = "none";
-    if (registerBtn) registerBtn.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "block";
-  } else {
-    userDisplay.style.display = "none";
-  }
-});
-
 // ================= SUMMARY.JS =================
 let students = [];
 let studentNameInput;
 let list;
 let avg;
 
+// DOMContentLoaded setup
 document.addEventListener("DOMContentLoaded", () => {
   studentNameInput = document.getElementById("studentName");
   list = document.getElementById("list");
   avg = document.getElementById("avg");
 
+  // Load students from localStorage
   students = JSON.parse(localStorage.getItem("students")) || [];
 
+  // Load temporary summary from grading.html
   loadTempSummary();
 });
 
-// ----------------- LOAD TEMP SUMMARY (PREVIEW ONLY) -----------------
+// ----------------- LOAD TEMP SUMMARY -----------------
 function loadTempSummary() {
   const temp = JSON.parse(localStorage.getItem("tempSummary"));
 
   list.innerHTML = "";
   avg.textContent = "0.00";
-  studentNameInput.value = "";
+  if (!studentNameInput) return;
+
+  studentNameInput.value = temp?.name || "";
 
   if (!temp || !temp.grades || temp.grades.length === 0) {
     list.innerHTML = "<p>No pending grades yet. Go to Grading first.</p>";
     return;
   }
 
-  studentNameInput.value = temp.name || "";
-
   let total = 0;
 
   temp.grades.forEach((g, i) => {
-    total += Number(g.grade || 0);
+    const gradeValue = Number(g.grade || 0);
+    total += gradeValue;
 
     list.innerHTML += `
       <div class="subject-item">
-        <strong>${g.subject || "Unnamed Subject"}</strong> - Grade: ${Number(g.grade || 0).toFixed(2)}%
+        <strong>${g.subject || "Unnamed Subject"}</strong> - Grade: ${gradeValue.toFixed(2)}%
         <button onclick="deleteTempSubject(${i})">Delete</button>
       </div>
     `;
@@ -103,13 +49,12 @@ function loadTempSummary() {
   avg.textContent = (total / temp.grades.length).toFixed(2);
 }
 
-// ----------------- DELETE SUBJECT FROM TEMP ONLY -----------------
+// ----------------- DELETE TEMP SUBJECT -----------------
 function deleteTempSubject(index) {
   let temp = JSON.parse(localStorage.getItem("tempSummary"));
-  if (!temp || !temp.grades) return;
+  if (!temp?.grades) return;
 
   temp.grades.splice(index, 1);
-
   localStorage.setItem("tempSummary", JSON.stringify(temp));
   loadTempSummary();
 }
@@ -117,7 +62,6 @@ function deleteTempSubject(index) {
 // ----------------- SAVE STUDENT NAME (TEMP ONLY) -----------------
 function saveStudentName() {
   let temp = JSON.parse(localStorage.getItem("tempSummary")) || { name: "", grades: [] };
-
   temp.name = studentNameInput.value.trim(); // allow blank
   localStorage.setItem("tempSummary", JSON.stringify(temp));
 
@@ -172,7 +116,13 @@ function saveToStudents() {
   loadTempSummary();
 }
 
-// ----------------- ADD SUBJECT (GO TO GRADING) -----------------
+// ----------------- ADD SUBJECT (BACK TO GRADING) -----------------
 function addSubject() {
   window.location.href = "grading.html";
 }
+
+// Make functions accessible from HTML buttons
+window.saveStudentName = saveStudentName;
+window.saveToStudents = saveToStudents;
+window.addSubject = addSubject;
+window.deleteTempSubject = deleteTempSubject;
