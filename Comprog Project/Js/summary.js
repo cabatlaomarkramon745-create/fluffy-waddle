@@ -3,67 +3,33 @@ const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
 
-function openMenu() {
-  if (!sideMenu || !overlay) return;
-  sideMenu.style.left = "0";
-  overlay.style.display = "block";
-}
+function openMenu() { sideMenu.style.left = "0"; overlay.style.display = "block"; }
+function closeMenu() { sideMenu.style.left = "-250px"; overlay.style.display = "none"; }
+function toggleProfile(event) { event.stopPropagation(); profileDropdown.style.display = profileDropdown.style.display === "block" ? "none" : "block"; }
+function logout() { localStorage.removeItem("loggedInUser"); window.location.href = "login.html"; }
 
-function closeMenu() {
-  if (!sideMenu || !overlay) return;
-  sideMenu.style.left = "-250px";
-  overlay.style.display = "none";
-}
-
-function toggleProfile(event) {
-  if (!profileDropdown) return;
-  event.stopPropagation();
-  profileDropdown.style.display =
-    profileDropdown.style.display === "block" ? "none" : "block";
-}
-
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-}
-
-document.addEventListener("click", function (e) {
-  if (!profileDropdown) return;
+document.addEventListener("click", e => {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ================= LOAD USER DISPLAY =================
+// ================= SUMMARY =================
+let studentNameInput, list, avg;
+
 document.addEventListener("DOMContentLoaded", () => {
-  const user = localStorage.getItem("loggedInUser");
-  const userDisplay = document.getElementById("userDisplay");
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+  studentNameInput = document.getElementById("studentName");
+  list = document.getElementById("list");
+  avg = document.getElementById("avg");
 
-  if (!userDisplay) return;
-
-  if (user) {
-    userDisplay.innerText = user.replace("@gmail.com", "");
-    if (loginBtn) loginBtn.style.display = "none";
-    if (registerBtn) registerBtn.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "block";
-  } else {
-    userDisplay.style.display = "none";
-  }
+  loadTempSummary();
 });
 
-// ================= SUMMARY FUNCTIONS =================
-let studentNameInput = document.getElementById("studentName");
-let list = document.getElementById("list");
-let avg = document.getElementById("avg");
-
-// Load temp grades from grading page
+// Load grades from sessionStorage
 function loadTempSummary() {
   const temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-
+  if (!list || !avg) return; // safety
   list.innerHTML = "";
   avg.textContent = "0.00";
-  if (!temp.grades || temp.grades.length === 0) {
+  if (!temp.grades.length) {
     list.innerHTML = "<p>No pending grades yet. Go to Grading first.</p>";
     return;
   }
@@ -75,7 +41,7 @@ function loadTempSummary() {
     total += Number(g.grade || 0);
     list.innerHTML += `
       <div class="subject-item">
-        <strong>${g.subject || "Unnamed Subject"}</strong> - Grade: ${Number(g.grade || 0).toFixed(2)}%
+        <strong>${g.subject}</strong> - Grade: ${Number(g.grade).toFixed(2)}%
         <button onclick="deleteTempSubject(${i})">Delete</button>
       </div>
     `;
@@ -84,16 +50,15 @@ function loadTempSummary() {
   avg.textContent = (total / temp.grades.length).toFixed(2);
 }
 
-// Delete a single subject from temp
+// Delete single subject
 function deleteTempSubject(index) {
-  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
-  if (!temp || !temp.grades) return;
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
   temp.grades.splice(index, 1);
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
   loadTempSummary();
 }
 
-// Save student name to temp
+// Save student name temporarily
 function saveStudentName() {
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
   temp.name = studentNameInput.value.trim();
@@ -101,13 +66,10 @@ function saveStudentName() {
   alert("Name saved temporarily.");
 }
 
-// Save temp -> students (final save)
+// Final save to localStorage
 function saveToStudents() {
-  let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
-  if (!temp || !temp.grades || temp.grades.length === 0) {
-    alert("No pending grades to save.");
-    return;
-  }
+  let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+  if (!temp.grades.length) { alert("No pending grades to save."); return; }
 
   temp.name = studentNameInput.value.trim();
   let students = JSON.parse(localStorage.getItem("students")) || [];
@@ -124,6 +86,3 @@ function saveToStudents() {
   alert("Student saved!");
   loadTempSummary();
 }
-
-// Initialize
-document.addEventListener("DOMContentLoaded", loadTempSummary);
