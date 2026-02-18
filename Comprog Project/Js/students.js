@@ -1,3 +1,7 @@
+// ================= FIREBASE =================
+import { auth, db } from "./firebase.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
 // ================= MENU + PROFILE =================
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
@@ -27,54 +31,72 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
+// ===== LOGOUT =====
 function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-
-
-
-
+  auth.signOut().then(() => {
+    window.location.href = "login.html";
+  }).catch(err => console.error("Logout failed:", err));
 }
 
 // ================= LOAD USER DISPLAY =================
-document.addEventListener("DOMContentLoaded", function () {
-  let user = localStorage.getItem("loggedInUser");
-  const userDisplay = document.getElementById("userDisplay");
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+const userDisplay = document.getElementById("userDisplay");
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-  if (!userDisplay) return; // skip if page has no menu
-
+auth.onAuthStateChanged(async (user) => {
   if (user) {
-    userDisplay.innerText = user.replace("@gmail.com", "");
+    if (userDisplay) {
+      userDisplay.innerText = user.email.split("@")[0];
+      userDisplay.style.display = "block";
+    }
     if (loginBtn) loginBtn.style.display = "none";
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
+
+    // Load students from Firebase
+    await loadStudentsFromFirebase(user.uid);
   } else {
-    userDisplay.style.display = "none";
+    if (userDisplay) userDisplay.style.display = "none";
+    if (loginBtn) loginBtn.style.display = "block";
+    if (registerBtn) registerBtn.style.display = "block";
+    if (logoutBtn) logoutBtn.style.display = "none";
+
+    // Load students from localStorage only if no user
+    loadStudentsFromLocal();
   }
 });
 
 // ================= STUDENTS =================
-let students = JSON.parse(localStorage.getItem("students")) || [];
+let students = [];
 
+// ----------------- LOAD STUDENTS FROM FIREBASE -----------------
+async function loadStudentsFromFirebase(uid) {
+  try {
+    const snapshot = await get(ref(db, `users/${uid}/students`));
+    students = snapshot.exists() ? snapshot.val() : [];
+    localStorage.setItem("students", JSON.stringify(students));
+    renderStudents();
+  } catch (err) {
+    console.error("Failed to load students from Firebase:", err);
+    loadStudentsFromLocal();
+  }
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadStudents();
+// ----------------- LOAD STUDENTS FROM LOCALSTORAGE -----------------
+function loadStudentsFromLocal() {
+  students = JSON.parse(localStorage.getItem("students")) || [];
+  renderStudents();
+}
 
-});
-
-// ----------------- LOAD STUDENTS -----------------
-function loadStudents() {
+// ----------------- RENDER STUDENTS -----------------
+function renderStudents() {
   const container = document.getElementById("studentContainer");
   if (!container) return;
 
   container.innerHTML = "";
 
-  students = JSON.parse(localStorage.getItem("students")) || [];
-
-  // AUTO REMOVE STUDENTS WITH NO SUBJECTS
+  // Remove students with no subjects
   students = students.filter(s => s.subjects && s.subjects.length > 0);
   localStorage.setItem("students", JSON.stringify(students));
 
@@ -86,16 +108,10 @@ function loadStudents() {
   students.forEach((student, si) => {
     let studentHTML = `
       <div class="student-card">
-        <!-- RED X TOP-RIGHT -->
         <button class="close-student" onclick="deleteStudent(${si})">X</button>
-
         <h3>${student.name || ""}</h3>
-
         <p><strong>Overall:</strong> ${(student.overall || 0).toFixed(2)}%</p>
-
-        <!-- ADD SUBJECT BUTTON BELOW OVERALL -->
         <button class="add-subject-btn" onclick="addSubjectToStudent(${si})">Add Subject</button>
-
         <ul class="subject-list">
     `;
 
@@ -111,11 +127,7 @@ function loadStudents() {
       `;
     });
 
-    studentHTML += `
-        </ul>
-      </div>
-    `;
-
+    studentHTML += "</ul></div>";
     container.innerHTML += studentHTML;
   });
 }
@@ -128,8 +140,7 @@ function editSubject(studentIndex, subjectIndex) {
 }
 
 // ----------------- DELETE SUBJECT -----------------
-function deleteSubject(studentIndex, subjectIndex) {
-  students = JSON.parse(localStorage.getItem("students")) || [];
+async function deleteSubject(studentIndex, subjectIndex) {
   if (!students[studentIndex] || !students[studentIndex].subjects[subjectIndex]) return;
 
   students[studentIndex].subjects.splice(subjectIndex, 1);
@@ -144,18 +155,27 @@ function deleteSubject(studentIndex, subjectIndex) {
   }
 
   localStorage.setItem("students", JSON.stringify(students));
-  loadStudents();
+
+  if (auth.currentUser) {
+    await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+  }
+
+  renderStudents();
 }
 
 // ----------------- DELETE WHOLE STUDENT -----------------
-function deleteStudent(studentIndex) {
-  students = JSON.parse(localStorage.getItem("students")) || [];
+async function deleteStudent(studentIndex) {
   if (!students[studentIndex]) return;
 
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
     localStorage.setItem("students", JSON.stringify(students));
-    loadStudents();
+
+    if (auth.currentUser) {
+      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+    }
+
+    renderStudents();
   }
 }
 
