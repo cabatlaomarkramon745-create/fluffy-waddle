@@ -40,11 +40,7 @@ body { font-family: Arial, sans-serif; background:#f4f4f4; }
 
 /* Main content */
 .main-content { padding:30px; display:flex; flex-direction:column; align-items:center; }
-.stats-container { display:flex; gap:40px; margin:20px 0; }
-.stat-box { background:#fff; padding:20px 30px; border-radius:8px; text-align:center; width:150px; }
-.stat-box h2 { margin-bottom:10px; }
 
-/* Cards */
 .cards { display:flex; gap:20px; margin-top:20px; }
 .cards .card {
   background:#fff; padding:20px; border-radius:8px;
