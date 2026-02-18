@@ -7,42 +7,45 @@
 </head>
 <body>
 
-  <!-- Navigator Bar -->
-<div class="navbar">
-  <span class="menu-icon" onclick="openMenu()">☰</span>
-  <div class="search-wrapper">
-    <input type="text" class="search-bar" placeholder="Search students...">
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <span class="menu-icon" onclick="openMenu()">☰</span>
+
+    <!-- SEARCH BAR -->
+    <div class="search-wrapper">
+      <input type="text" class="search-bar" placeholder="Search students...">
+    </div>
+
+    <!-- PROFILE AREA -->
+    <div class="profile-area">
+      <div class="profile-icon" onclick="toggleProfile(event)">
+        <img src="images/profile-icon.png" 
+             alt="Profile" 
+             onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
+      </div>
+
+      <div class="profile-dropdown" id="profileDropdown">                        
+        <a href="login.html" id="loginBtn">Login</a>
+        <a href="register.html" id="registerBtn">Register</a>
+        <a href="#" id="logoutBtn" style="display:none;">Logout</a>
+      </div>
+    </div>
   </div>
 
-  <div class="profile-area">
-    <div class="profile-icon" onclick="toggleProfile(event)">
-      <img src="images/profile-icon.png" alt="Profile" 
-           onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
-    </div>
-    <div class="profile-dropdown" id="profileDropdown">
-      <a id="userDisplay">Guest</a>        
-      <a href="login.html" id="loginBtn">Login</a>
-      <a href="register.html" id="registerBtn">Register</a>
-      <a href="#" onclick="logout()" id="logoutBtn">Logout</a>
-    </div>
+  <!-- SIDE MENU -->
+  <div class="side-menu" id="sideMenu">
+    <span class="close-btn" onclick="closeMenu()">✖</span>
+    <a href="home.html">🏠 Home</a>
+    <a href="students.html">📄 Students</a>
+    <a href="grading.html">🧮 Grading</a>
   </div>
-</div>
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-<!-- Side Menu -->
-<div class="side-menu" id="sideMenu">
-  <span class="close-btn" onclick="closeMenu()">✖</span>
-  <a href="home.html">🏠 Home</a>
-  <a href="students.html">📄 Students</a>
-  <a href="grading.html">🧮 Grading</a>
-  <a href="settings.html">⚙ Settings</a>
-</div>
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
-
-  <!-- Main content -->
+  <!-- MAIN CONTENT -->
   <div class="main-content">
     <h1 style="text-align: center;">Welcome, <span id="userNameDisplay">Guest</span></h1>
-    
-    <!-- Stats -->
+
+    <!-- STUDENT STATS -->
     <div class="stats">
       <div class="stat-box">👨‍🎓
         Students Graded<br>
@@ -53,12 +56,16 @@
     <h2 class="start-text" style="text-align: center;">Let’s get started</h2>
 
     <div class="cards">
-      <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
-      <div class="card" onclick="location.href='students.html'">📄 View Students</div>
+      <div class="card" onclick="location.href='grading.html'">
+        🧮 Grading
+      </div>
+      <div class="card" onclick="location.href='students.html'">
+        📄 View Students
+      </div>
     </div>
   </div>
 
-  <!-- Load home.js as module to use Firebase -->
+  <!-- HOME JS -->
   <script type="module" src="Js/home.js"></script>
 </body>
 </html>
