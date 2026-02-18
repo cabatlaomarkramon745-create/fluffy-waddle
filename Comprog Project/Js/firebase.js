@@ -1,63 +1,24 @@
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-document.addEventListener("DOMContentLoaded", () => {
+// TODO: Replace the following with your app's Firebase project configuration
+// You can find this in your Firebase Console -> Project Settings -> General -> Your Apps
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-  const sideMenu = document.getElementById("sideMenu");
-  const overlay = document.getElementById("overlay");
-  const profileDropdown = document.getElementById("profileDropdown");
-  const userNameDisplay = document.getElementById("userNameDisplay");
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const studentCount = document.getElementById("studentCount");
-  const averageGrade = document.getElementById("averageGrade");
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-  // ===== MENU FUNCTIONS =====
-  window.openMenu = () => { sideMenu.style.left="0"; overlay.style.display="block"; };
-  window.closeMenu = () => { sideMenu.style.left="-250px"; overlay.style.display="none"; };
-  window.toggleProfile = (e) => { e.stopPropagation(); profileDropdown.style.display=profileDropdown.style.display==="block"?"none":"block"; };
-  document.addEventListener("click", e=>{if(!e.target.closest(".profile-area")) profileDropdown.style.display="none";});
-
-  // ===== Firebase Auth & Realtime DB =====
-  onAuthStateChanged(auth, async (user)=>{
-    if(user){
-      const name = user.email.split("@")[0];
-      userNameDisplay.innerText = name;
-
-      loginBtn.style.display="none";
-      registerBtn.style.display="none";
-      logoutBtn.style.display="block";
-
-      // Fetch students
-      try{
-        const dbRef = ref(db,"students");
-        const snapshot = await get(child(dbRef,""));
-        let students = snapshot.exists()?Object.values(snapshot.val()):[];
-
-        studentCount.innerText = students.length;
-
-        if(students.length>0){
-          let total=0, graded=0;
-          students.forEach(s=>{ if(typeof s.overall==="number"){ total+=s.overall; graded++; }});
-          if(graded>0) averageGrade.innerText=(total/graded).toFixed(1);
-        }
-
-      }catch(err){ console.error("Error fetching students:", err);}
-    } else {
-      userNameDisplay.innerText="Guest";
-      loginBtn.style.display="block";
-      registerBtn.style.display="block";
-      logoutBtn.style.display="none";
-    }
-  });
-
-  // ===== LOGOUT =====
-  window.logout = async ()=>{
-    try{
-      await signOut(auth);
-      window.location.href="login.html";
-    }catch(err){console.error(err);}
-  };
-});
+// Export instances to be used in other files
+export { auth, db };
