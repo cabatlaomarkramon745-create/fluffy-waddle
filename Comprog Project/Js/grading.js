@@ -145,7 +145,23 @@ async function calculate() {
 
   // ===== NEW: PUSH TO SUMMARY (SESSION STORAGE) =====
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-  
+
+  // Save total of grading (sum of all subjects in tempSummary)
+let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+
+// Add new grade to temp.grades (already exists in your code)
+temp.grades.push({
+  subject: subject,
+  grade: Number(finalGrade)
+});
+
+// --- NEW: Calculate total grades ---
+let totalGrade = temp.grades.reduce((sum, g) => sum + g.grade, 0);
+sessionStorage.setItem("gradingTotal", JSON.stringify(totalGrade));
+
+// Save back tempSummary
+sessionStorage.setItem("tempSummary", JSON.stringify(temp));
+
   // Add the new grade to the list
   temp.grades.push({ 
     subject: subject, 
