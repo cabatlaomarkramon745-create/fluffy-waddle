@@ -1,53 +1,64 @@
 import { auth, db } from "./firebase.js";
-import { ref, get, set, child, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-// ===== MENU + PROFILE =====
+import { ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+let currentUserId = null;
+
+// ===== DOM ELEMENTS =====
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
 
+// ===== MENU + PROFILE =====
 window.openMenu = () => {
-  if (sideMenu && overlay) {
-    sideMenu.style.left = "0";
-    overlay.style.display = "block";
-  }
+  sideMenu.style.left = "0";
+  overlay.style.display = "block";
 };
 
 window.closeMenu = () => {
-  if (sideMenu && overlay) {
-    sideMenu.style.left = "-250px";
-    overlay.style.display = "none";
-  }
+  sideMenu.style.left = "-250px";
+  overlay.style.display = "none";
 };
 
 window.toggleProfile = (event) => {
   event.stopPropagation();
-  if (profileDropdown) {
-    profileDropdown.style.display =
-      profileDropdown.style.display === "block" ? "none" : "block";
-  }
+  profileDropdown.style.display =
+    profileDropdown.style.display === "block" ? "none" : "block";
 };
 
 document.addEventListener("click", (e) => {
-  if (!e.target.closest(".profile-area") && profileDropdown) {
-    profileDropdown.style.display = "none";
-  }
+  if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ===== USER STATE =====
+// ===== FIREBASE AUTH =====
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUserId = user.uid;
+    const userDisplay = document.getElementById("userDisplay");
+    userDisplay.innerText = user.email.split("@")[0];
+    userDisplay.style.display = "block";
 
+    document.getElementById("loginBtn").style.display = "none";
+    document.getElementById("registerBtn").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "block";
 
-    // Load grading totals
-    await loadQuizTotals();
+    // Load saved inputs if any
     loadSavedInputs();
-    loadEditData();
+    loadQuizTotals();
+
+  } else {
+    currentUserId = null;
+    document.getElementById("userDisplay").style.display = "none";
+    document.getElementById("loginBtn").style.display = "block";
+    document.getElementById("registerBtn").style.display = "block";
+    document.getElementById("logoutBtn").style.display = "none";
   }
 });
 
-// Logout
+// ===== LOGOUT =====
 window.logout = async () => {
   try {
-    await auth.signOut();
+    await signOut(auth);
     window.location.href = "login.html";
   } catch (err) {
     console.error("Logout failed:", err);
@@ -56,7 +67,7 @@ window.logout = async () => {
 
 // ===== VALIDATION =====
 function validateGradingInputs() {
-  const requiredFields = [
+  const fields = [
     { id: "subject", name: "Subject" },
     { id: "qScore", name: "Quiz Score" },
     { id: "qMax", name: "Quiz Max" },
@@ -71,17 +82,17 @@ function validateGradingInputs() {
 
   let firstInvalid = null;
 
-  requiredFields.forEach(field => {
-    const el = document.getElementById(field.id);
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
     el.classList.remove("input-error");
     if (!el.value.trim()) {
       el.classList.add("input-error");
-      if (!firstInvalid) firstInvalid = field;
+      if (!firstInvalid) firstInvalid = f;
     }
   });
 
   if (firstInvalid) {
-    alert(firstInvalid.name + " is required.");
+    alert(`${firstInvalid.name} is required`);
     document.getElementById(firstInvalid.id).focus();
     return false;
   }
@@ -89,19 +100,21 @@ function validateGradingInputs() {
   return true;
 }
 
-// ===== CALCULATE & SAVE =====
+// ===== CALCULATE FINAL GRADE =====
 async function calculate() {
   if (!validateGradingInputs()) return;
+  if (!currentUserId) {
+    alert("You must be logged in!");
+    return;
+  }
 
-
-
-  const subjectName = document.getElementById("subject").value.trim();
+  const subject = document.getElementById("subject").value.trim();
   const wQ = Number(document.getElementById("wQuiz").value);
   const wE = Number(document.getElementById("wExam").value);
   const wA = Number(document.getElementById("wAttend").value);
 
   if (wQ + wE + wA !== 100) {
-    alert("Percentage must total 100%");
+    alert("Weights must total 100%");
     return;
   }
 
@@ -120,24 +133,10 @@ async function calculate() {
   const finalGrade = ((qS/qM)*wQ + (eS/eM)*wE + (aS/aM)*wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-
-
   // ===== SAVE TO FIREBASE =====
   try {
-    const userGradesRef = ref(db, `grades/${currentUserId}`);
-    const snapshot = await get(child(userGradesRef, subjectName));
-
-
-
-
-    await set(child(userGradesRef, subjectName), {
-
-
-
-
-
-
-      subject: subjectName,
+    await set(ref(db, `grades/${currentUserId}/${subject}`), {
+      subject,
       quiz: qS,
       quizMax: qM,
       exam: eS,
@@ -149,38 +148,14 @@ async function calculate() {
       wAttend: wA,
       overall: Number(finalGrade)
     });
-
-
     alert("Grade saved to Firebase!");
-
-
-
-
-
-
   } catch (err) {
     console.error("Error saving grade:", err);
-    alert("Failed to save grade.");
+    alert("Failed to save grade");
   }
 }
 
-// ===== QUIZ TOTALS =====
-function loadQuizTotals() {
-  const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals")) || { totalScore: 0, totalMax: 0 };
-  document.getElementById("qScore").value = savedTotals.totalScore;
-  document.getElementById("qMax").value = savedTotals.totalMax;
-}
-
-
-
-
-  // 3. Populate grading inputs
-  document.getElementById("qScore").value = totalScore;
-  document.getElementById("qMax").value = totalMax;
-}
-
-
-// ===== SAVE / LOAD INPUTS =====
+// ===== SESSION STORAGE HELPERS =====
 function saveCurrentInputs() {
   const data = {
     subject: document.getElementById("subject").value,
@@ -192,7 +167,7 @@ function saveCurrentInputs() {
     wExam: document.getElementById("wExam").value,
     wAttend: document.getElementById("wAttend").value
   };
-  sessionStorage.setItem("gradingInputs", JSON.stringify(data)); // temporary
+  sessionStorage.setItem("gradingInputs", JSON.stringify(data));
 }
 
 function loadSavedInputs() {
@@ -209,19 +184,19 @@ function loadSavedInputs() {
   document.getElementById("wAttend").value = data.wAttend || 20;
 }
 
-// ===== UTILITY =====
-function formatUserName(email) {
-  if (!email) return "Guest";
-  return email.replace("@gmail.com", "");
+function loadQuizTotals() {
+  const totals = JSON.parse(sessionStorage.getItem("quizTotals")) || { totalScore: 0, totalMax: 0 };
+  document.getElementById("qScore").value = totals.totalScore;
+  document.getElementById("qMax").value = totals.totalMax;
 }
 
-// Export calculate so HTML can call it
+// ===== EXPORT FUNCTIONS FOR HTML =====
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
 
+// ===== INITIAL LOAD =====
 window.addEventListener("DOMContentLoaded", () => {
   loadSavedInputs();
-  loadQuizTotals();  // This will read quiz totals from sessionStorage and populate the inputs
+  loadQuizTotals();
 });
-~
