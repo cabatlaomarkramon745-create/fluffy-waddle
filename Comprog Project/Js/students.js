@@ -54,8 +54,8 @@ auth.onAuthStateChanged(async (user) => {
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
 
-    // Load students from Firebase
-    await loadStudentsFromFirebase(user.uid);
+    // Load students with merge from localStorage
+    setTimeout(() => loadStudentsFromFirebase(user.uid), 200);
   } else {
     if (userDisplay) userDisplay.style.display = "none";
     if (loginBtn) loginBtn.style.display = "block";
@@ -70,15 +70,49 @@ auth.onAuthStateChanged(async (user) => {
 // ================= STUDENTS =================
 let students = [];
 
-// ----------------- LOAD STUDENTS FROM FIREBASE -----------------
+// ----------------- LOAD STUDENTS FROM FIREBASE (MERGE LOCAL) -----------------
 async function loadStudentsFromFirebase(uid) {
   try {
-    const snapshot = await get(ref(db, `users/${uid}/students`));
-    students = snapshot.exists() ? snapshot.val() : [];
-    localStorage.setItem("students", JSON.stringify(students));
+    const cloudSnap = await get(ref(db, `users/${uid}/students`));
+    let cloudStudents = cloudSnap.exists() ? cloudSnap.val() : [];
+
+    let localStudents = JSON.parse(localStorage.getItem("students")) || [];
+    let synced = localStorage.getItem("studentsSynced") === "true";
+
+    // ===== IF LOCAL DATA NOT YET UPLOADED =====
+    if (!synced && localStudents.length > 0) {
+      console.log("Uploading local students to account...");
+
+      const merged = [...cloudStudents];
+
+      localStudents.forEach(local => {
+        const exists = merged.some(c =>
+          c.name === local.name &&
+          JSON.stringify(c.subjects) === JSON.stringify(local.subjects)
+        );
+
+        if (!exists) merged.push(local);
+      });
+
+      students = merged;
+
+      // PERMANENT SAVE TO ACCOUNT
+      await set(ref(db, `users/${uid}/students`), students);
+
+      // mark as synced
+      localStorage.setItem("studentsSynced", "true");
+      localStorage.setItem("students", JSON.stringify(students));
+
+    } else {
+      // normal load
+      students = cloudStudents;
+      localStorage.setItem("students", JSON.stringify(students));
+    }
+
     renderStudents();
+
   } catch (err) {
-    console.error("Failed to load students from Firebase:", err);
+    console.error("Firebase failed, using offline:", err);
     loadStudentsFromLocal();
   }
 }
@@ -96,9 +130,7 @@ function renderStudents() {
 
   container.innerHTML = "";
 
-  // Remove students with no subjects
-  students = students.filter(s => s.subjects && s.subjects.length > 0);
-  localStorage.setItem("students", JSON.stringify(students));
+  students = students || []; // do not delete empty students
 
   if (!students.length) {
     container.innerHTML = "<p>No students yet.</p>";
@@ -115,7 +147,7 @@ function renderStudents() {
         <ul class="subject-list">
     `;
 
-    student.subjects.forEach((sub, subi) => {
+    student.subjects?.forEach((sub, subi) => {
       studentHTML += `
         <li class="subject-item">
           ${sub.subject || "Unnamed Subject"}: ${(sub.grade || 0).toFixed(2)}%
@@ -136,6 +168,7 @@ function renderStudents() {
 function editSubject(studentIndex, subjectIndex) {
   localStorage.setItem("editStudentIndex", studentIndex);
   localStorage.setItem("editSubjectIndex", subjectIndex);
+  localStorage.setItem("studentsSynced", "false"); // new edits require resync
   window.location.href = "grading.html";
 }
 
@@ -155,6 +188,7 @@ async function deleteSubject(studentIndex, subjectIndex) {
   }
 
   localStorage.setItem("students", JSON.stringify(students));
+  localStorage.setItem("studentsSynced", "false");
 
   if (auth.currentUser) {
     await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
@@ -170,6 +204,7 @@ async function deleteStudent(studentIndex) {
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
     localStorage.setItem("students", JSON.stringify(students));
+    localStorage.setItem("studentsSynced", "false");
 
     if (auth.currentUser) {
       await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
@@ -183,6 +218,7 @@ async function deleteStudent(studentIndex) {
 function addSubjectToStudent(studentIndex) {
   localStorage.setItem("editStudentIndex", studentIndex);
   localStorage.removeItem("editSubjectIndex"); // new subject
+  localStorage.setItem("studentsSynced", "false");
   window.location.href = "grading.html";
 }
 
@@ -191,5 +227,6 @@ function addNewStudent() {
   localStorage.removeItem("editStudentIndex");
   localStorage.removeItem("editSubjectIndex");
   localStorage.removeItem("tempSummary");
+  localStorage.setItem("studentsSynced", "false"); // important
   window.location.href = "grading.html";
 }
