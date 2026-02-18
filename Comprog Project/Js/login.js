@@ -1,85 +1,69 @@
 import { auth } from "./firebase.js";
-import { signInWithEmailAndPassword } 
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  signInWithEmailAndPassword, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// auto redirect if already logged in 
+const loginBtn = document.getElementById("loginBtn");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const messageDiv = document.getElementById("message");
+
+// Redirect if already logged in
 onAuthStateChanged(auth, (user) => {
-  if(user){
-    window.location.href = "grading.html";
+  if (user) {
+    // Pick ONE destination. I chose home.html based on your other code.
+    window.location.href = "home.html"; 
   }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const loginBtn = document.getElementById("loginBtn");
-  const emailInput = document.getElementById("email");
-  const passwordInput = document.getElementById("password");
-  const messageDiv = document.getElementById("message");
+// Login Function
+if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
 
-  loginBtn.addEventListener("click", async () => {
-    let email = emailInput.value.trim().toLowerCase(); // lowercase for consistency
-    let password = passwordInput.value.trim();
+        if (!email || !password) {
+            showMessage("Please fill in all fields.", "red");
+            return;
+        }
 
-    if (!email || !password) {
-      showError("Please fill in both fields.");
-      return;
-    }
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Logging in...";
 
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Logging in...";
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      console.log("Login successful:", user);
-
-      // Optionally save logged in email locally
-      localStorage.setItem("loggedInUser", email);
-
-      showSuccess("✅ Login successful! Redirecting...");
-
-      setTimeout(() => {
-        window.location.href = "home.html";
-      }, 1000);
-
-    } catch (error) {
-      console.error("Firebase login error:", error); // debug
-      handleLoginError(error);
-    } finally {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Login";
-    }
-  });
-
-  // Press Enter to login (works on both email & password fields)
-  [emailInput, passwordInput].forEach(input => {
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") loginBtn.click();
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            showMessage("✅ Login successful! Redirecting...", "green");
+            // No need to manually redirect here; onAuthStateChanged will handle it
+        } catch (error) {
+            console.error(error);
+            handleError(error);
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Login";
+        }
     });
-  });
-});
-
-function handleLoginError(error) {
-  const errorMessages = {
-    "auth/user-not-found": "No account found with this email.",
-    "auth/wrong-password": "Incorrect password.",
-    "auth/invalid-email": "Invalid email address.",
-    "auth/user-disabled": "This account has been disabled.",
-    "auth/too-many-requests": "Too many failed attempts. Try again later."
-  };
-
-  const message = errorMessages[error.code] || error.message;
-  showError("❌ " + message);
 }
 
-function showError(message) {
-  const messageDiv = document.getElementById("message");
-  messageDiv.textContent = message;
-  messageDiv.style.color = "red";
+function handleError(error) {
+    let msg = "An error occurred.";
+    switch (error.code) {
+        case "auth/invalid-credential":
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+            msg = "Invalid email or password.";
+            break;
+        case "auth/too-many-requests":
+            msg = "Too many failed attempts. Try again later.";
+            break;
+    }
+    showMessage(msg, "red");
 }
 
-function showSuccess(message) {
-  const messageDiv = document.getElementById("message");
-  messageDiv.textContent = message;
-  messageDiv.style.color = "green";
+function showMessage(text, color) {
+    if (messageDiv) {
+        messageDiv.textContent = text;
+        messageDiv.style.color = color;
+    } else {
+        alert(text);
+    }
 }
