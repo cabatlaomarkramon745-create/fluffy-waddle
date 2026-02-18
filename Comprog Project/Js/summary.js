@@ -200,3 +200,4 @@ function saveToStudents() {
 function addSubject() {
   window.location.href = "grading.html";
 }
+
