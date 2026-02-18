@@ -1,53 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student System</title>
-<link rel="stylesheet" href="css/stylehome.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grading System</title>
+  <link rel="stylesheet" href="css/stylegrading.css">
 </head>
 <body>
 
-<!-- Navbar -->
-<div class="navbar">
-  <span class="menu-icon" onclick="openMenu()">☰</span>
-  <div class="search-wrapper">
-    <input type="text" placeholder="Search students...">
-  </div>
-  <div class="profile-area">
-    <div class="profile-icon" onclick="toggleProfile(event)">
-      <img src="images/profile-icon.png" alt="Profile" onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <span class="menu-icon" onclick="openMenu()">☰</span>
+
+    <div class="search-wrapper">
+      <input type="text" class="search-bar" placeholder="Search students...">
     </div>
-    <div class="profile-dropdown" id="profileDropdown">
-      <a id="userName">Guest</a>
-      <a href="login.html" id="loginBtn">Login</a>
-      <a href="register.html" id="registerBtn">Register</a>
-      <a href="#" id="logoutBtn" onclick="logout()" style="display:none;">Logout</a>
+
+    <div class="profile-area">
+      <div class="profile-icon" onclick="toggleProfile(event)">
+        <img src="images/profile-icon.png" alt="Profile"
+             onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a id="userDisplay">Guest User</a>
+        <a href="login.html" id="loginBtn">Login</a>
+        <a href="register.html" id="registerBtn">Register</a>
+        <a href="#" id="logoutBtn" onclick="logout()" style="display:none;">Logout</a>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Side Menu -->
-<div class="side-menu" id="sideMenu">
-  <span class="close-btn" onclick="closeMenu()">✖</span>
-  <a href="home.html">🏠 Home</a>
-  <a href="students.html">📄 Students</a>
-  <a href="grading.html">🧮 Grading</a>
-</div>
-
-<!-- Overlay -->
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
-
-<!-- Main Content -->
-<div class="main-content">
-  <h1>Welcome, <span id="userNameMain">Guest</span></h1>
-  <h2>Let's get started</h2>
-  <div class="cards">
-    <div class="card" onclick="location.href='grading.html'">🧮 Grading</div>
-    <div class="card" onclick="location.href='students.html'">📄 View Students</div>
+  <!-- SIDE MENU -->
+  <div class="side-menu" id="sideMenu">
+    <span class="close-btn" onclick="closeMenu()">✖</span>
+    <a href="home.html">🏠 Home</a>
+    <a href="students.html">📄 Students</a>
+    <a href="grading.html">🧮 Grading</a>
+    <a href="settings.html">⚙ Settings</a>
   </div>
-</div>
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-<script type="module" src="js/home.js" defer></script>
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <h1>Grading System</h1>
+
+    <!-- SUBJECT -->
+    <div class="box">
+      <h2>Subject</h2>
+      <div class="subject-wrapper">
+        <input type="text" id="subject" placeholder="Enter or select subject"
+               onclick="toggleSubjects()"
+               oninput="filterSubjects(); removeNumbers(this);">
+        <span class="dropdown-btn" onclick="toggleSubjects()">▾</span>
+        <div class="subject-dropdown" id="subjectDropdown">
+          <div onclick="selectSubject('Math')">Math</div>
+          <div onclick="selectSubject('English')">English</div>
+          <div onclick="selectSubject('Science')">Science</div>
+          <div onclick="selectSubject('History')">History</div>
+          <div onclick="selectSubject('Computer')">Computer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEIGHTS -->
+    <div class="box">
+      <h2>1. Set Percentage (Total = 100%)</h2>
+      Quiz Percentage (%) <input id="wQuiz" type="number" value="40">
+      Exam Percentage (%) <input id="wExam" type="number" value="40">
+      Attendance Percentage (%) <input id="wAttend" type="number" value="20">
+    </div>
+
+    <!-- SCORES -->
+    <div class="box">
+      <h2>2. Enter Scores</h2>
+      <div class="score-group">
+        <h3>Quiz</h3>
+        Total Quiz Score <input id="qScore" type="number" readonly>
+        Total Quiz Max <input id="qMax" type="number" readonly>
+        <button onclick="saveCurrentInputs(); location.href='quiz.html'">Edit Quizzes</button>
+      </div>
+      <div class="score-group">
+        <h3>Exam</h3>
+        Exam Score <input id="eScore" type="number">
+        Exam Max <input id="eMax" type="number" value="50">
+      </div>
+      <div class="score-group">
+        <h3>Attendance</h3>
+        Attendance Score <input id="aScore" type="number">
+        Attendance Max <input id="aMax" type="number" value="100">
+      </div>
+    </div>
+
+    <!-- CALCULATE -->
+   <button id="calculateBtn" onclick="calculate()">Calculate</button>
+<h2 id="final-grade" class="final-grade">Final Grade: <span id="final">0.00</span>%</h2>
+<h2 class="final-grade" id="final-grade">Final Grade: <span id="final">0.00</span>%</h2>
+<button id="viewSubjectsBtn" onclick="location.href='summary.html'">View All Subjects</button>
+
+
+  </div>
+
+  <!-- JS -->
+  <script type="module" src="Js/grading.js"></script>
 </body>
 </html>
