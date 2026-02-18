@@ -2,7 +2,7 @@ import { auth } from "./firebase.js";
 import { signInWithEmailAndPassword } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// auto redirect if already logged in
+// auto redirect if already logged in 
 onAuthStateChanged(auth, (user) => {
   if(user){
     window.location.href = "grading.html";
