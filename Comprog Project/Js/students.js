@@ -51,6 +51,27 @@ function logout() {
 // ================= STUDENTS =================
 let students = [];
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ----------------- AUTH + LOAD -----------------
 auth.onAuthStateChanged(async (user) => {
   if (user) {
@@ -114,7 +135,6 @@ async function uploadSummaryLocalToFirebase(uid) {
     localStorage.setItem("students", JSON.stringify(students));
 
     renderStudents();
-
   } catch (err) {
     console.error("Firebase upload failed, using offline:", err);
     loadStudentsFromLocal();
@@ -124,7 +144,6 @@ async function uploadSummaryLocalToFirebase(uid) {
 // ----------------- LOAD FROM LOCAL -----------------
 function loadStudentsFromLocal() {
   students = JSON.parse(localStorage.getItem("students")) || [];
-
   renderStudents();
 }
 
@@ -191,7 +210,6 @@ async function deleteSubject(studentIndex, subjectIndex) {
   }
 
   localStorage.setItem("students", JSON.stringify(students));
-
   localStorage.setItem("studentsSynced", "false");
 
   if (auth.currentUser) {
@@ -209,7 +227,6 @@ async function deleteStudent(studentIndex) {
     students.splice(studentIndex, 1);
 
     localStorage.setItem("students", JSON.stringify(students));
-
     localStorage.setItem("studentsSynced", "false");
 
     if (auth.currentUser) {
