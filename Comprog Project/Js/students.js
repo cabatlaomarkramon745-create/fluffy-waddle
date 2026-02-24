@@ -11,6 +11,7 @@ const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
+
 function openMenu() {
   if (!sideMenu || !overlay) return;
   sideMenu.style.left = "0";
@@ -35,6 +36,7 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
+
 function logout() {
   if (auth.currentUser) {
     auth.signOut()
@@ -49,14 +51,6 @@ function logout() {
 // ================= STUDENTS =================
 let students = [];
 
-// 🔐 Small security helper (does NOT affect logic)
-function escapeHTML(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 // ----------------- AUTH + LOAD -----------------
 auth.onAuthStateChanged(async (user) => {
   if (user) {
@@ -69,32 +63,28 @@ auth.onAuthStateChanged(async (user) => {
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
 
-    await uploadSummaryLocalToFirebase(user.uid);
+    // Merge summary localStorage into Firebase for this user
+    setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
 
   } else {
+    // Offline / localStorage fallback
     const localUser = localStorage.getItem("loggedInUser");
-
     if (localUser) {
-      if (userDisplay) {
-        userDisplay.innerText = localUser.replace("@gmail.com", "");
-        userDisplay.style.display = "block";
-      }
+      userDisplay.innerText = localUser.replace("@gmail.com", "");
+      userDisplay.style.display = "block";
       if (loginBtn) loginBtn.style.display = "none";
       if (registerBtn) registerBtn.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "block";
 
+
     } else {
-      if (userDisplay) userDisplay.style.display = "none";
+      userDisplay.style.display = "none";
       if (loginBtn) loginBtn.style.display = "block";
       if (registerBtn) registerBtn.style.display = "block";
       if (logoutBtn) logoutBtn.style.display = "none";
     }
-
-    loadStudentsFromLocal(null);
+    loadStudentsFromLocal();
   }
-
-  // Always save any tempSummary on load to prevent duplicates
-  saveTempSummaryToStudents();
 });
 
 // ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
@@ -103,8 +93,7 @@ async function uploadSummaryLocalToFirebase(uid) {
     const snapshot = await get(ref(db, `users/${uid}/students`));
     const cloudStudents = snapshot.exists() ? snapshot.val() : [];
 
-    const localStudents =
-      JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
+    const localStudents = JSON.parse(localStorage.getItem("students")) || [];
 
     let merged = [...cloudStudents];
 
@@ -118,28 +107,24 @@ async function uploadSummaryLocalToFirebase(uid) {
 
     students = merged;
 
+
     await set(ref(db, `users/${uid}/students`), students);
 
-    localStorage.setItem(`students_${uid}`, JSON.stringify(students));
     localStorage.setItem("studentsSynced", "true");
+    localStorage.setItem("students", JSON.stringify(students));
 
     renderStudents();
 
   } catch (err) {
     console.error("Firebase upload failed, using offline:", err);
-    loadStudentsFromLocal(uid);
+    loadStudentsFromLocal();
   }
 }
 
 // ----------------- LOAD FROM LOCAL -----------------
-function loadStudentsFromLocal(uid = null) {
-  if (uid) {
-    students =
-      JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
-  } else {
-    students =
-      JSON.parse(localStorage.getItem("students")) || [];
-  }
+function loadStudentsFromLocal() {
+  students = JSON.parse(localStorage.getItem("students")) || [];
+
   renderStudents();
 }
 
@@ -160,8 +145,8 @@ function renderStudents() {
     let studentHTML = `
       <div class="student-card">
         <button class="close-student" onclick="deleteStudent(${si})">X</button>
-        <h3>${escapeHTML(student.name || "")}</h3>
-        <p><strong>Overall:</strong> ${Number(student.overall || 0).toFixed(2)}%</p>
+        <h3>${student.name || ""}</h3>
+        <p><strong>Overall:</strong> ${(student.overall || 0).toFixed(2)}%</p>
         <button class="add-subject-btn" onclick="addSubjectToStudent(${si})">Add Subject</button>
         <ul class="subject-list">
     `;
@@ -169,7 +154,7 @@ function renderStudents() {
     student.subjects?.forEach((sub, subi) => {
       studentHTML += `
         <li class="subject-item">
-          ${escapeHTML(sub.subject || "Unnamed Subject")}: ${Number(sub.grade || 0).toFixed(2)}%
+          ${sub.subject || "Unnamed Subject"}: ${(sub.grade || 0).toFixed(2)}%
           <div class="subject-buttons">
             <button onclick="editSubject(${si}, ${subi})">Edit</button>
             <button onclick="deleteSubject(${si}, ${subi})">Delete</button>
@@ -192,11 +177,7 @@ function editSubject(studentIndex, subjectIndex) {
 }
 
 async function deleteSubject(studentIndex, subjectIndex) {
-  if (
-    !students[studentIndex] ||
-    !students[studentIndex].subjects ||
-    !students[studentIndex].subjects[subjectIndex]
-  ) return;
+  if (!students[studentIndex] || !students[studentIndex].subjects[subjectIndex]) return;
 
   students[studentIndex].subjects.splice(subjectIndex, 1);
 
@@ -209,23 +190,13 @@ async function deleteSubject(studentIndex, subjectIndex) {
       students[studentIndex].subjects.length;
   }
 
-  if (auth.currentUser) {
-    localStorage.setItem(
-      `students_${auth.currentUser.uid}`,
-      JSON.stringify(students)
-    );
-  } else {
-    localStorage.setItem("students", JSON.stringify(students));
-  }
+  localStorage.setItem("students", JSON.stringify(students));
 
   localStorage.setItem("studentsSynced", "false");
 
   if (auth.currentUser) {
-    try {
-      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-    } catch (err) {
-      console.error("Firebase update failed:", err);
-    }
+    await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+
   }
 
   renderStudents();
@@ -237,23 +208,13 @@ async function deleteStudent(studentIndex) {
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
 
-    if (auth.currentUser) {
-      localStorage.setItem(
-        `students_${auth.currentUser.uid}`,
-        JSON.stringify(students)
-      );
-    } else {
-      localStorage.setItem("students", JSON.stringify(students));
-    }
+    localStorage.setItem("students", JSON.stringify(students));
 
     localStorage.setItem("studentsSynced", "false");
 
     if (auth.currentUser) {
-      try {
-        await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-      } catch (err) {
-        console.error("Firebase update failed:", err);
-      }
+      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+
     }
 
     renderStudents();
@@ -275,43 +236,8 @@ function addNewStudent() {
   window.location.href = "grading.html";
 }
 
-// ----------------- SAVE TEMP SUMMARY TO STUDENTS -----------------
-function saveTempSummaryToStudents() {
-  const temp = JSON.parse(sessionStorage.getItem("tempSummary"));
-  if (!temp || !temp.grades || temp.grades.length === 0) return;
-
-  const loggedInUser = localStorage.getItem("loggedInUser");
-  const userId = loggedInUser ? loggedInUser.replace("@gmail.com", "") : null;
-  const key = userId ? `students_${userId}` : "students";
-
-  let studentsList = JSON.parse(localStorage.getItem(key)) || [];
-
-  const studentData = {
-    name: temp.name || "",
-    subjects: temp.grades.map(g => ({ subject: g.subject || "Unnamed Subject", grade: Number(g.grade || 0) })),
-    overall: temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) / temp.grades.length
-  };
-
-  const editIndex = localStorage.getItem("editStudentIndex");
-  if (editIndex !== null) {
-    studentsList[editIndex] = studentData;
-    localStorage.removeItem("editStudentIndex");
-  } else {
-    const existing = studentsList.findIndex(s => s.name === studentData.name);
-    if (existing !== -1) {
-      studentsList[existing] = studentData;
-    } else {
-      studentsList.push(studentData);
-    }
-  }
-
-  localStorage.setItem(key, JSON.stringify(studentsList));
-  sessionStorage.removeItem("tempSummary");
-
-  renderStudents();
-}
-
 // ================= EXPORT GLOBAL FUNCTIONS =================
+// make functions callable from HTML buttons
 window.openMenu = openMenu;
 window.closeMenu = closeMenu;
 window.toggleProfile = toggleProfile;
