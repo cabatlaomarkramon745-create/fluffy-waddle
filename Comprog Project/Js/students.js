@@ -166,7 +166,6 @@ function renderStudents() {
         <button class="close-student" onclick="deleteStudent(${si})">X</button>
         <h3>${student.name || ""}</h3>
         <p><strong>Overall:</strong> ${(student.overall || 0).toFixed(2)}%</p>
-        <button class="add-subject-btn" onclick="addSubjectToStudent(${si})">Add Subject</button>
         <ul class="subject-list">
     `;
 
@@ -175,7 +174,6 @@ function renderStudents() {
         <li class="subject-item">
           ${sub.subject || "Unnamed Subject"}: ${(sub.grade || 0).toFixed(2)}%
           <div class="subject-buttons">
-            <button onclick="editSubject(${si}, ${subi})">Edit</button>
             <button onclick="deleteSubject(${si}, ${subi})">Delete</button>
           </div>
         </li>
