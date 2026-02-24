@@ -11,7 +11,7 @@ const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// ================= MENU FUNCTIONS =================
+
 function openMenu() {
   if (!sideMenu || !overlay) return;
   sideMenu.style.left = "0";
@@ -36,13 +36,14 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
+
 function logout() {
   if (auth.currentUser) {
     auth.signOut()
       .then(() => window.location.href = "login.html")
       .catch(err => console.error("Logout failed:", err));
   } else {
-    localStorage.removeItem(`students_${localUser}`);
+    localStorage.removeItem("loggedInUser");
     window.location.href = "login.html";
   }
 }
@@ -50,21 +51,22 @@ function logout() {
 // ================= STUDENTS =================
 let students = [];
 
-// ================= LOCAL STORAGE PER USER =================
-function saveStudentsLocally(uid) {
-  localStorage.setItem(`students_${uid}`, JSON.stringify(students));
-  localStorage.setItem("studentsSynced", "true");
-}
 
-function loadStudentsFromLocal(uid) {
-  students = JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
-  renderStudents();
-}
 
-// ================= AUTH + LOAD =================
+
+
+
+
+
+
+
+
+
+
+// ----------------- AUTH + LOAD -----------------
 auth.onAuthStateChanged(async (user) => {
   if (user) {
-    // UI Updates
+
     if (userDisplay) {
       userDisplay.innerText = user.email.split("@")[0];
       userDisplay.style.display = "block";
@@ -73,7 +75,7 @@ auth.onAuthStateChanged(async (user) => {
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
 
-    // Load students from Firebase and merge with localStorage for this user
+    // Merge summary localStorage into Firebase for this user
     setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
 
   } else {
@@ -86,24 +88,25 @@ auth.onAuthStateChanged(async (user) => {
       if (registerBtn) registerBtn.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "block";
 
-      loadStudentsFromLocal(localUser);
+
     } else {
       userDisplay.style.display = "none";
       if (loginBtn) loginBtn.style.display = "block";
       if (registerBtn) registerBtn.style.display = "block";
       if (logoutBtn) logoutBtn.style.display = "none";
     }
+    loadStudentsFromLocal();
   }
 });
 
-// ================= UPLOAD / MERGE LOCAL TO FIREBASE =================
+// ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
 async function uploadSummaryLocalToFirebase(uid) {
   try {
     const snapshot = await get(ref(db, `users/${uid}/students`));
     const cloudStudents = snapshot.exists() ? snapshot.val() : [];
 
-    // Load only this user's local students
-    const localStudents = JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
+    const localStudents = JSON.parse(localStorage.getItem("students")) || [];
+
     let merged = [...cloudStudents];
 
     localStudents.forEach(local => {
@@ -116,18 +119,26 @@ async function uploadSummaryLocalToFirebase(uid) {
 
     students = merged;
 
-    // Save merged data both to Firebase and localStorage
+
     await set(ref(db, `users/${uid}/students`), students);
-    saveStudentsLocally(uid);
+
+    localStorage.setItem("studentsSynced", "true");
+    localStorage.setItem("students", JSON.stringify(students));
 
     renderStudents();
   } catch (err) {
     console.error("Firebase upload failed, using offline:", err);
-    loadStudentsFromLocal(uid);
+    loadStudentsFromLocal();
   }
 }
 
-// ================= RENDER STUDENTS =================
+// ----------------- LOAD FROM LOCAL -----------------
+function loadStudentsFromLocal() {
+  students = JSON.parse(localStorage.getItem("students")) || [];
+  renderStudents();
+}
+
+// ----------------- RENDER STUDENTS -----------------
 function renderStudents() {
   const container = document.getElementById("studentContainer");
   if (!container) return;
@@ -167,7 +178,7 @@ function renderStudents() {
   });
 }
 
-// ================= EDIT / DELETE / ADD =================
+// ----------------- EDIT / DELETE / ADD -----------------
 function editSubject(studentIndex, subjectIndex) {
   localStorage.setItem("editStudentIndex", studentIndex);
   localStorage.setItem("editSubjectIndex", subjectIndex);
@@ -189,9 +200,12 @@ async function deleteSubject(studentIndex, subjectIndex) {
       students[studentIndex].subjects.length;
   }
 
+  localStorage.setItem("students", JSON.stringify(students));
+  localStorage.setItem("studentsSynced", "false");
+
   if (auth.currentUser) {
     await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-    saveStudentsLocally(auth.currentUser.uid);
+
   }
 
   renderStudents();
@@ -203,9 +217,12 @@ async function deleteStudent(studentIndex) {
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
 
+    localStorage.setItem("students", JSON.stringify(students));
+    localStorage.setItem("studentsSynced", "false");
+
     if (auth.currentUser) {
       await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-      saveStudentsLocally(auth.currentUser.uid);
+
     }
 
     renderStudents();
@@ -228,6 +245,7 @@ function addNewStudent() {
 }
 
 // ================= EXPORT GLOBAL FUNCTIONS =================
+// make functions callable from HTML buttons
 window.openMenu = openMenu;
 window.closeMenu = closeMenu;
 window.toggleProfile = toggleProfile;
