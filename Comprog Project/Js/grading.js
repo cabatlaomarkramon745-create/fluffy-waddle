@@ -152,8 +152,43 @@ async function calculate() {
   }
 
   alert("Grade saved!");
-}
 
+  // ===================== ADDED CODE =====================
+  // ===================== EDITED CODE FOR STUDENTS COMPATIBILITY =====================
+if (currentUserId) {
+  const key = `students_${currentUserId}`;
+  let students = JSON.parse(localStorage.getItem(key)) || [];
+
+  // Get updated temp summary
+  let updatedTemp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
+
+  // Ensure tempSummary has a name (load from editStudentIndex if missing)
+  const editIndex = localStorage.getItem("editStudentIndex");
+  if (!updatedTemp.name && editIndex !== null) {
+    const existingStudent = students[editIndex];
+    if (existingStudent) {
+      updatedTemp.name = existingStudent.name;
+      updatedTemp.grades = existingStudent.subjects?.map(s => ({ subject: s.subject, grade: s.grade })) || [];
+    }
+  }
+
+  // Add current grade
+  updatedTemp.grades = updatedTemp.grades || [];
+  updatedTemp.grades.push({ subject, grade: Number(finalGrade) });
+
+  // Convert grades -> subjects for students.js
+  updatedTemp.subjects = updatedTemp.grades.map(g => ({ subject: g.subject, grade: g.grade }));
+
+  // Save/update student in students array
+  if (editIndex !== null) {
+    students[editIndex] = updatedTemp;
+  } else {
+    students.push(updatedTemp);
+  }
+
+  localStorage.setItem(key, JSON.stringify(students));
+}
+// ===================== END EDITED CODE =====================
 // ================= SESSION STORAGE HELPERS =================
 function saveCurrentInputs() {
   const data = {
