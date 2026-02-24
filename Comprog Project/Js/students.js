@@ -92,6 +92,9 @@ auth.onAuthStateChanged(async (user) => {
 
     loadStudentsFromLocal(null);
   }
+
+  // Always save any tempSummary on load to prevent duplicates
+  saveTempSummaryToStudents();
 });
 
 // ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
@@ -270,6 +273,42 @@ function addNewStudent() {
   localStorage.removeItem("tempSummary");
   localStorage.setItem("studentsSynced", "false");
   window.location.href = "grading.html";
+}
+
+// ----------------- SAVE TEMP SUMMARY TO STUDENTS -----------------
+function saveTempSummaryToStudents() {
+  const temp = JSON.parse(sessionStorage.getItem("tempSummary"));
+  if (!temp || !temp.grades || temp.grades.length === 0) return;
+
+  const loggedInUser = localStorage.getItem("loggedInUser");
+  const userId = loggedInUser ? loggedInUser.replace("@gmail.com", "") : null;
+  const key = userId ? `students_${userId}` : "students";
+
+  let studentsList = JSON.parse(localStorage.getItem(key)) || [];
+
+  const studentData = {
+    name: temp.name || "",
+    subjects: temp.grades.map(g => ({ subject: g.subject || "Unnamed Subject", grade: Number(g.grade || 0) })),
+    overall: temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) / temp.grades.length
+  };
+
+  const editIndex = localStorage.getItem("editStudentIndex");
+  if (editIndex !== null) {
+    studentsList[editIndex] = studentData;
+    localStorage.removeItem("editStudentIndex");
+  } else {
+    const existing = studentsList.findIndex(s => s.name === studentData.name);
+    if (existing !== -1) {
+      studentsList[existing] = studentData;
+    } else {
+      studentsList.push(studentData);
+    }
+  }
+
+  localStorage.setItem(key, JSON.stringify(studentsList));
+  sessionStorage.removeItem("tempSummary");
+
+  renderStudents();
 }
 
 // ================= EXPORT GLOBAL FUNCTIONS =================
