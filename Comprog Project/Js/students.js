@@ -116,7 +116,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
+// ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE (FIXED) -----------------
 async function uploadSummaryLocalToFirebase(uid) {
   try {
     const snapshot = await get(ref(db, `users/${uid}/students`));
@@ -124,18 +124,24 @@ async function uploadSummaryLocalToFirebase(uid) {
 
     const localStudents = JSON.parse(localStorage.getItem("students")) || [];
 
-    let merged = [...cloudStudents];
+    const merged = [...cloudStudents];
 
     localStudents.forEach(local => {
-      const exists = merged.some(f =>
-        f.name === local.name &&
-        JSON.stringify(f.subjects) === JSON.stringify(local.subjects)
-      );
+      // Check if this student already exists in cloud
+      const exists = merged.some(cloud => {
+        if (cloud.name !== local.name) return false;
+        const cloudSubs = cloud.subjects || [];
+        const localSubs = local.subjects || [];
+        if (cloudSubs.length !== localSubs.length) return false;
+        return cloudSubs.every((s, i) =>
+          s.subject === localSubs[i].subject &&
+          Number(s.grade).toFixed(2) === Number(localSubs[i].grade).toFixed(2)
+        );
+      });
       if (!exists) merged.push(local);
     });
 
     students = merged;
-
 
     await set(ref(db, `users/${uid}/students`), students);
 
