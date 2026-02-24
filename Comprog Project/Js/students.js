@@ -11,7 +11,6 @@ const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-
 function openMenu() {
   if (!sideMenu || !overlay) return;
   sideMenu.style.left = "0";
@@ -36,7 +35,6 @@ document.addEventListener("click", function (e) {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-
 function logout() {
   if (auth.currentUser) {
     auth.signOut()
@@ -51,17 +49,13 @@ function logout() {
 // ================= STUDENTS =================
 let students = [];
 
-
-
-
-
-
-
-
-
-
-
-
+// 🔐 Small security helper (does NOT affect logic)
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 // ----------------- AUTH + LOAD -----------------
 auth.onAuthStateChanged(async (user) => {
@@ -75,27 +69,29 @@ auth.onAuthStateChanged(async (user) => {
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
 
-    // Merge summary localStorage into Firebase for this user
     await uploadSummaryLocalToFirebase(user.uid);
 
   } else {
-    // Offline / localStorage fallback
     const localUser = localStorage.getItem("loggedInUser");
+
     if (localUser) {
-      userDisplay.innerText = localUser.replace("@gmail.com", "");
-      userDisplay.style.display = "block";
+      if (userDisplay) {
+        userDisplay.innerText = localUser.replace("@gmail.com", "");
+        userDisplay.style.display = "block";
+      }
       if (loginBtn) loginBtn.style.display = "none";
       if (registerBtn) registerBtn.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "block";
 
-
     } else {
-      userDisplay.style.display = "none";
+      if (userDisplay) userDisplay.style.display = "none";
       if (loginBtn) loginBtn.style.display = "block";
       if (registerBtn) registerBtn.style.display = "block";
       if (logoutBtn) logoutBtn.style.display = "none";
     }
-loadStudentsFromLocal(null);  }
+
+    loadStudentsFromLocal(null);
+  }
 });
 
 // ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
@@ -104,7 +100,6 @@ async function uploadSummaryLocalToFirebase(uid) {
     const snapshot = await get(ref(db, `users/${uid}/students`));
     const cloudStudents = snapshot.exists() ? snapshot.val() : [];
 
-    // 🔐 account-specific local storage
     const localStudents =
       JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
 
@@ -122,7 +117,6 @@ async function uploadSummaryLocalToFirebase(uid) {
 
     await set(ref(db, `users/${uid}/students`), students);
 
-    // 🔐 save per account
     localStorage.setItem(`students_${uid}`, JSON.stringify(students));
     localStorage.setItem("studentsSynced", "true");
 
@@ -133,6 +127,7 @@ async function uploadSummaryLocalToFirebase(uid) {
     loadStudentsFromLocal(uid);
   }
 }
+
 // ----------------- LOAD FROM LOCAL -----------------
 function loadStudentsFromLocal(uid = null) {
   if (uid) {
@@ -162,8 +157,8 @@ function renderStudents() {
     let studentHTML = `
       <div class="student-card">
         <button class="close-student" onclick="deleteStudent(${si})">X</button>
-        <h3>${student.name || ""}</h3>
-        <p><strong>Overall:</strong> ${(student.overall || 0).toFixed(2)}%</p>
+        <h3>${escapeHTML(student.name || "")}</h3>
+        <p><strong>Overall:</strong> ${Number(student.overall || 0).toFixed(2)}%</p>
         <button class="add-subject-btn" onclick="addSubjectToStudent(${si})">Add Subject</button>
         <ul class="subject-list">
     `;
@@ -171,7 +166,7 @@ function renderStudents() {
     student.subjects?.forEach((sub, subi) => {
       studentHTML += `
         <li class="subject-item">
-          ${sub.subject || "Unnamed Subject"}: ${(sub.grade || 0).toFixed(2)}%
+          ${escapeHTML(sub.subject || "Unnamed Subject")}: ${Number(sub.grade || 0).toFixed(2)}%
           <div class="subject-buttons">
             <button onclick="editSubject(${si}, ${subi})">Edit</button>
             <button onclick="deleteSubject(${si}, ${subi})">Delete</button>
@@ -194,7 +189,11 @@ function editSubject(studentIndex, subjectIndex) {
 }
 
 async function deleteSubject(studentIndex, subjectIndex) {
-  if (!students[studentIndex] || !students[studentIndex].subjects[subjectIndex]) return;
+  if (
+    !students[studentIndex] ||
+    !students[studentIndex].subjects ||
+    !students[studentIndex].subjects[subjectIndex]
+  ) return;
 
   students[studentIndex].subjects.splice(subjectIndex, 1);
 
@@ -207,19 +206,23 @@ async function deleteSubject(studentIndex, subjectIndex) {
       students[studentIndex].subjects.length;
   }
 
- if (auth.currentUser) {
-  localStorage.setItem(
-    `students_${auth.currentUser.uid}`,
-    JSON.stringify(students)
-  );
-} else {
-  localStorage.setItem("students", JSON.stringify(students));
-}
+  if (auth.currentUser) {
+    localStorage.setItem(
+      `students_${auth.currentUser.uid}`,
+      JSON.stringify(students)
+    );
+  } else {
+    localStorage.setItem("students", JSON.stringify(students));
+  }
+
   localStorage.setItem("studentsSynced", "false");
 
   if (auth.currentUser) {
-    await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-
+    try {
+      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+    } catch (err) {
+      console.error("Firebase update failed:", err);
+    }
   }
 
   renderStudents();
@@ -231,19 +234,23 @@ async function deleteStudent(studentIndex) {
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
 
-   if (auth.currentUser) {
-  localStorage.setItem(
-    `students_${auth.currentUser.uid}`,
-    JSON.stringify(students)
-  );
-} else {
-  localStorage.setItem("students", JSON.stringify(students));
-}
+    if (auth.currentUser) {
+      localStorage.setItem(
+        `students_${auth.currentUser.uid}`,
+        JSON.stringify(students)
+      );
+    } else {
+      localStorage.setItem("students", JSON.stringify(students));
+    }
+
     localStorage.setItem("studentsSynced", "false");
 
     if (auth.currentUser) {
-      await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
-
+      try {
+        await set(ref(db, `users/${auth.currentUser.uid}/students`), students);
+      } catch (err) {
+        console.error("Firebase update failed:", err);
+      }
     }
 
     renderStudents();
@@ -266,7 +273,6 @@ function addNewStudent() {
 }
 
 // ================= EXPORT GLOBAL FUNCTIONS =================
-// make functions callable from HTML buttons
 window.openMenu = openMenu;
 window.closeMenu = closeMenu;
 window.toggleProfile = toggleProfile;
