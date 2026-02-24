@@ -3,9 +3,11 @@
 }
 
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  min-height: 100svh; /* modern safe viewport */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 /* NAVBAR */
