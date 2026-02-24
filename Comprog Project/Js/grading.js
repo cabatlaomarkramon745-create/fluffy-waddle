@@ -137,7 +137,7 @@ async function calculate() {
   const finalGrade = ((qS / qM) * wQ + (eS / eM) * wE + (aS / aM) * wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== SAVE TEMP TO SESSION STORAGE (ONLY ONCE) =====
+  // ===== SAVE TEMP TO SESSION STORAGE =====
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
   temp.grades.push({ subject, grade: Number(finalGrade) });
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
@@ -149,34 +149,6 @@ async function calculate() {
     } catch (err) {
       console.error("Firebase save failed:", err);
     }
-  }
-
-  // ===================== STUDENTS.JS COMPATIBILITY =====================
-  if (currentUserId) {
-    const key = `students_${currentUserId}`;
-    let students = JSON.parse(localStorage.getItem(key)) || [];
-
-    let updatedTemp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-    const editIndex = localStorage.getItem("editStudentIndex");
-
-    if (!updatedTemp.name && editIndex !== null) {
-      const existingStudent = students[editIndex];
-      if (existingStudent) {
-        updatedTemp.name = existingStudent.name;
-        updatedTemp.grades = existingStudent.subjects?.map(s => ({ subject: s.subject, grade: s.grade })) || [];
-      }
-    }
-
-    // Map grades -> subjects
-    updatedTemp.subjects = updatedTemp.grades.map(g => ({ subject: g.subject, grade: g.grade }));
-
-    if (editIndex !== null) {
-      students[editIndex] = updatedTemp;
-    } else {
-      students.push(updatedTemp);
-    }
-
-    localStorage.setItem(key, JSON.stringify(students));
   }
 
   alert("Grade saved!");
@@ -227,17 +199,10 @@ if (subjectInput) {
   });
 }
 
-// ================= ADD SUBJECT BUTTON =================
-function addSubject() {
-  saveCurrentInputs(); // ensure tempSummary and input values are saved
-  window.location.href = "grading.html";
-}
-
 // ================= EXPORT FUNCTIONS =================
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
-window.addSubject = addSubject;
 
 // ================= INITIAL LOAD =================
 window.addEventListener("DOMContentLoaded", () => {
