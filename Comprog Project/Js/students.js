@@ -76,7 +76,7 @@ auth.onAuthStateChanged(async (user) => {
     if (logoutBtn) logoutBtn.style.display = "block";
 
     // Merge summary localStorage into Firebase for this user
-    setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
+    await uploadSummaryLocalToFirebase(user.uid);
 
   } else {
     // Offline / localStorage fallback
@@ -95,8 +95,7 @@ auth.onAuthStateChanged(async (user) => {
       if (registerBtn) registerBtn.style.display = "block";
       if (logoutBtn) logoutBtn.style.display = "none";
     }
-    loadStudentsFromLocal();
-  }
+loadStudentsFromLocal(null);  }
 });
 
 // ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE -----------------
@@ -105,7 +104,9 @@ async function uploadSummaryLocalToFirebase(uid) {
     const snapshot = await get(ref(db, `users/${uid}/students`));
     const cloudStudents = snapshot.exists() ? snapshot.val() : [];
 
-    const localStudents = JSON.parse(localStorage.getItem("students")) || [];
+    // 🔐 account-specific local storage
+    const localStudents =
+      JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
 
     let merged = [...cloudStudents];
 
@@ -119,22 +120,28 @@ async function uploadSummaryLocalToFirebase(uid) {
 
     students = merged;
 
-
     await set(ref(db, `users/${uid}/students`), students);
 
+    // 🔐 save per account
+    localStorage.setItem(`students_${uid}`, JSON.stringify(students));
     localStorage.setItem("studentsSynced", "true");
-    localStorage.setItem("students", JSON.stringify(students));
 
     renderStudents();
+
   } catch (err) {
     console.error("Firebase upload failed, using offline:", err);
-    loadStudentsFromLocal();
+    loadStudentsFromLocal(uid);
   }
 }
-
 // ----------------- LOAD FROM LOCAL -----------------
-function loadStudentsFromLocal() {
-  students = JSON.parse(localStorage.getItem("students")) || [];
+function loadStudentsFromLocal(uid = null) {
+  if (uid) {
+    students =
+      JSON.parse(localStorage.getItem(`students_${uid}`)) || [];
+  } else {
+    students =
+      JSON.parse(localStorage.getItem("students")) || [];
+  }
   renderStudents();
 }
 
@@ -200,7 +207,14 @@ async function deleteSubject(studentIndex, subjectIndex) {
       students[studentIndex].subjects.length;
   }
 
+ if (auth.currentUser) {
+  localStorage.setItem(
+    `students_${auth.currentUser.uid}`,
+    JSON.stringify(students)
+  );
+} else {
   localStorage.setItem("students", JSON.stringify(students));
+}
   localStorage.setItem("studentsSynced", "false");
 
   if (auth.currentUser) {
@@ -217,7 +231,14 @@ async function deleteStudent(studentIndex) {
   if (confirm(`Are you sure you want to delete ${students[studentIndex].name}?`)) {
     students.splice(studentIndex, 1);
 
-    localStorage.setItem("students", JSON.stringify(students));
+   if (auth.currentUser) {
+  localStorage.setItem(
+    `students_${auth.currentUser.uid}`,
+    JSON.stringify(students)
+  );
+} else {
+  localStorage.setItem("students", JSON.stringify(students));
+}
     localStorage.setItem("studentsSynced", "false");
 
     if (auth.currentUser) {
