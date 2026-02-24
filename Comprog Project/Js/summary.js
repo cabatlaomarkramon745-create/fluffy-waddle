@@ -112,7 +112,7 @@ function deleteTempSubject(index) {
   loadTempSummary();
 }
 
-// ----------------- SAVE STUDENT NAME -----------------
+
 // ----------------- SAVE STUDENT NAME -----------------
 function saveStudentName() {
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
@@ -133,40 +133,34 @@ function saveToStudents() {
   temp.name = studentNameInput.value.trim();
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
-  // Determine correct key for logged-in user
-  const loggedInUser = localStorage.getItem("loggedInUser"); // email string
-  const userId = loggedInUser ? loggedInUser.replace("@gmail.com", "") : null;
-  const key = userId ? `students_${userId}` : "students";
+  students = JSON.parse(localStorage.getItem("students")) || [];
 
-  let students = JSON.parse(localStorage.getItem(key)) || [];
 
-  // Prepare new student data
+
+
+
+
+
   const newStudentData = {
     name: temp.name || "",
     subjects: temp.grades.map(g => ({
       subject: g.subject || "Unnamed Subject",
       grade: Number(g.grade || 0)
     })),
-    overall:
-      temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) /
-      temp.grades.length
+    overall: temp.grades.reduce((a, g) => a + Number(g.grade || 0), 0) / temp.grades.length
+
+
   };
 
-  // Check if editing an existing student
-  const editIndex = localStorage.getItem("editStudentIndex");
-  if (editIndex !== null) {
-    students[editIndex] = newStudentData;
-    localStorage.removeItem("editStudentIndex");
-  } else {
-    students.push(newStudentData);
-  }
+  students.push(newStudentData);
 
-  localStorage.setItem(key, JSON.stringify(students));
+  localStorage.setItem("students", JSON.stringify(students));
   sessionStorage.removeItem("tempSummary");
 
   alert("Student saved permanently!");
   loadTempSummary();
 }
+
 // ----------------- ADD SUBJECT (BACK TO GRADING) -----------------
 function addSubject() {
   window.location.href = "grading.html";
