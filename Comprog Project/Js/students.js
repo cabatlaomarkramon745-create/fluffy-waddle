@@ -40,10 +40,18 @@ document.addEventListener("click", function (e) {
 function logout() {
   if (auth.currentUser) {
     auth.signOut()
-      .then(() => window.location.href = "login.html")
+      .then(() => {
+        // Clear localStorage so next user doesn't see previous account's data
+        localStorage.removeItem("loggedInUser");
+        localStorage.removeItem("students");
+        localStorage.removeItem("studentsSynced");
+        window.location.href = "login.html";
+      })
       .catch(err => console.error("Logout failed:", err));
   } else {
     localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("students");
+    localStorage.removeItem("studentsSynced");
     window.location.href = "login.html";
   }
 }
