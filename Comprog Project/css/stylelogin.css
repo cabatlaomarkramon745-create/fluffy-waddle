@@ -106,7 +106,7 @@ button:hover {
   cursor: pointer;
 }
 
-/* Optional: improve spacing for inputs */
+/* improve spacing for inputs */
 input[type="email"],
 input[type="password"] {
   width: 100%;
