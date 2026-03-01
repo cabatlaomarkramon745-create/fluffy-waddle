@@ -1,17 +1,17 @@
-// ================= IMPORTS =================
+//IMPORTS FIREBASE
 import { auth, db } from "./firebase.js";
 import { ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 let currentUserId = null;
 
-// ================= DOM ELEMENTS =================
+//DOM ELEMENTS
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
 const subjectInput = document.getElementById("subject");
 
-// ================= MENU + PROFILE =================
+//MENU + PROFILE
 window.openMenu = () => {
   if (!sideMenu || !overlay) return;
   sideMenu.style.left = "0";
@@ -36,7 +36,7 @@ document.addEventListener("click", (e) => {
   if (!e.target.closest(".profile-area")) profileDropdown.style.display = "none";
 });
 
-// ================= FIREBASE AUTH =================
+//FIREBASE AUTH
 onAuthStateChanged(auth, (user) => {
   const userDisplay = document.getElementById("userDisplay");
   const loginBtn = document.getElementById("loginBtn");
@@ -64,7 +64,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// ================= LOGOUT =================
+//LOGOUT
 window.logout = async () => {
   try {
     await signOut(auth);
@@ -74,7 +74,7 @@ window.logout = async () => {
   }
 };
 
-// ================= VALIDATION =================
+//VALIDATION
 function validateGradingInputs() {
   const lettersOnly = /^[A-Za-z\s]+$/;
   const fields = [
@@ -116,7 +116,7 @@ function validateGradingInputs() {
   return true;
 }
 
-// ================= CALCULATE & SAVE =================
+//CALCULATE & SAVE
 async function calculate() {
   if (!validateGradingInputs()) return;
 
@@ -137,12 +137,12 @@ async function calculate() {
   const finalGrade = ((qS / qM) * wQ + (eS / eM) * wE + (aS / aM) * wA).toFixed(2);
   document.getElementById("final").textContent = finalGrade;
 
-  // ===== SAVE TEMP TO SESSION STORAGE =====
+  //SAVE TEMP TO SESSION STORAGE
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
   temp.grades.push({ subject, grade: Number(finalGrade) });
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
-  // Optional: save to Firebase if logged in
+  // BACKUP SAVE OF FIREBASE
   if (currentUserId) {
     try {
       await set(ref(db, `grades/${currentUserId}/${subject}`), { subject, overall: Number(finalGrade) });
@@ -154,7 +154,7 @@ async function calculate() {
   alert("Grade saved!");
 }
 
-// ================= SESSION STORAGE HELPERS =================
+//SESSION STORAGE HELPERS
 function saveCurrentInputs() {
   const data = {
     subject: subjectInput.value,
@@ -192,19 +192,19 @@ function loadQuizTotals() {
   document.getElementById("qMax").value = totals.totalMax;
 }
 
-// ================= REAL-TIME SUBJECT VALIDATION =================
+// AUTO SUBJECT VALIDATION
 if (subjectInput) {
   subjectInput.addEventListener("input", () => {
     subjectInput.value = subjectInput.value.replace(/[^A-Za-z\s]/g, "");
   });
 }
 
-// ================= EXPORT FUNCTIONS =================
+//EXPORT FUNCTIONS
 window.calculate = calculate;
 window.saveCurrentInputs = saveCurrentInputs;
 window.loadSavedInputs = loadSavedInputs;
 
-// ================= INITIAL LOAD =================
+//INITIAL LOAD
 window.addEventListener("DOMContentLoaded", () => {
   loadSavedInputs();
   loadQuizTotals();
