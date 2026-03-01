@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 //WRONG USER OR PASS
     function handleError(error) {
-        let msg = "An error occurred.";
+        let msg = "Incorrect Username Or Password.";
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/wrong-password":
