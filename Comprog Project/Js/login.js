@@ -9,6 +9,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const passwordInput = document.getElementById("password");
     const messageDiv = document.getElementById("message");
 
+    //SHOW PASSWORD
+    const showPasswordCheckbox = document.getElementById("showPassword");
+
+    //PASSWORD VISIBLE
+    if (showPasswordCheckbox) {
+        showPasswordCheckbox.addEventListener("change", () => {
+            if (showPasswordCheckbox.checked) {
+                passwordInput.type = "text";
+            } else {
+                passwordInput.type = "password";
+            }
+        });
+    }
+
     if (loginBtn) {
         loginBtn.addEventListener("click", async () => {
             const email = emailInput.value.trim();
