@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   //AUTH
   onAuthStateChanged(auth, (user) => {
-    if (user) 
+    if (user) {
       if (userNameDisplay) userNameDisplay.innerText = formatUserName(user.email);
 
       if (loginBtn) loginBtn.style.display = "none";
