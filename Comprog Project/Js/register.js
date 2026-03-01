@@ -21,6 +21,16 @@ if (showPasswordCheckbox) {
     });
 }
 
+//PASSWORD STRENGTH VALIDATION
+function isStrongPassword(password) {
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasMinLength = password.length >= 6;
+
+    return hasUppercase && hasNumber && hasSymbol && hasMinLength;
+}
+
 if (registerBtn) {
     registerBtn.addEventListener("click", async () => {
         const username = usernameInput.value.trim();
@@ -32,23 +42,28 @@ if (registerBtn) {
             return;
         }
 
+       //PASSWORD VALIDATION
+        if (!isStrongPassword(password)) {
+            showMessage(
+                "Password must contain at least 1 capital letter, 1 number, and 1 symbol.",
+                "red"
+            );
+            return;
+        }
+
         registerBtn.disabled = true;
         registerBtn.textContent = "Creating account...";
 
         try {
-            // 1. Create User in Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // 2. Update Auth Profile with Username (DisplayName)
             await updateProfile(user, { displayName: username });
 
-            // 3. Save extra data to Database
-            // SECURITY NOTE: We do NOT save the password here.
             await set(ref(db, "users/" + user.uid), {
                 username: username,
                 email: email,
-                role: "student", // default role
+                role: "student", 
                 createdAt: new Date().toISOString()
             });
 
