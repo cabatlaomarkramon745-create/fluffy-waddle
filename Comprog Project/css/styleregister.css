@@ -81,3 +81,33 @@ button:hover {
 .contain{
     text-align: center;
 }
+
+
+/* Show Password Container */
+.show-password {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+/* Checkbox size */
+.show-password input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Optional: better input spacing */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
