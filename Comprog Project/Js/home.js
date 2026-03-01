@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const registerBtn = document.getElementById("registerBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  // ===== MENU =====
+  //MENU
   window.openMenu = function () {
     if (sideMenu && overlay) {
       sideMenu.style.left = "0";
@@ -39,10 +39,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // ===== AUTH =====
+  //AUTH
   onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // Show logged-in user
+    if (user) 
       if (userNameDisplay) userNameDisplay.innerText = formatUserName(user.email);
 
       if (loginBtn) loginBtn.style.display = "none";
@@ -50,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (logoutBtn) logoutBtn.style.display = "block";
 
     } else {
-      // User not logged in -> redirect to login page
+      // REDIRECT TO LOGIN
       window.location.href = "login.html";
     }
   });
@@ -59,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     logoutBtn.addEventListener("click", logout);
   }
 
-  // ===== STUDENT COUNT + AVERAGE =====
+  //STUDENT COUNT + AVERAGE
   let students = JSON.parse(localStorage.getItem("students")) || [];
 
   const studentCount = document.getElementById("studentCount");
@@ -84,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-// ===== FUNCTIONS =====
+// USERNAME
 function formatUserName(email) {
   return email ? email.replace("@gmail.com", "") : "";
 }
