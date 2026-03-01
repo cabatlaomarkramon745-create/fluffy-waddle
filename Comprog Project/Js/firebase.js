@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// Your Firebase project config (exact copy from your Firebase)
+// Firebase project config (exact copy from your Firebase)
 const firebaseConfig = {
   apiKey: "AIzaSyDDNz-1PjZE3AJbB6LlkMGiSrzjGyPAqho",
   authDomain: "comprog-project-account.firebaseapp.com",
