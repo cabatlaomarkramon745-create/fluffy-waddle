@@ -1,6 +1,7 @@
+//IMPORT FROM FIREBASE
 import { auth } from "./firebase.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+//DOM ELEMENT
 document.addEventListener("DOMContentLoaded", () => {
 
     const loginBtn = document.getElementById("loginBtn");
@@ -22,13 +23,13 @@ document.addEventListener("DOMContentLoaded", () => {
             loginBtn.textContent = "Logging in...";
 
             try {
-                // Attempt to log in
+                // LOGGING IN
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 console.log("Login successful:", userCredential.user.email);
 
                 showMessage("✅ Login successful! Redirecting...", "green");
 
-                // Redirect immediately after login
+                // REDIRECT IF SUCCESS
                 window.location.href = "home.html";
 
             } catch (error) {
@@ -40,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-
+//WRONG USER OR PASS
     function handleError(error) {
         let msg = "An error occurred.";
         switch (error.code) {
@@ -54,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         showMessage(msg, "red");
     }
-
+//DISPLAY MESSAGE
     function showMessage(text, color) {
         if (messageDiv) {
             messageDiv.textContent = text;
