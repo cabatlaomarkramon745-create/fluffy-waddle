@@ -11,6 +11,16 @@ const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const messageDiv = document.getElementById("message");
 
+// SHOW PASSWORD
+const showPasswordCheckbox = document.getElementById("showPassword");
+
+//PASSWORD VISIBLE
+if (showPasswordCheckbox) {
+    showPasswordCheckbox.addEventListener("change", () => {
+        passwordInput.type = showPasswordCheckbox.checked ? "text" : "password";
+    });
+}
+
 if (registerBtn) {
     registerBtn.addEventListener("click", async () => {
         const username = usernameInput.value.trim();
