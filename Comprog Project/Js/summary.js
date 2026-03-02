@@ -1,4 +1,4 @@
-// ================= MENU + PROFILE =================
+//MENU + PROFILE
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
@@ -32,7 +32,7 @@ function logout() {
   window.location.href = "login.html";
 }
 
-// ================= LOAD USER DISPLAY =================
+//LOAD USER DISPLAY
 document.addEventListener("DOMContentLoaded", function () {
   let user = localStorage.getItem("loggedInUser");
   const userDisplay = document.getElementById("userDisplay");
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const registerBtn = document.getElementById("registerBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  if (!userDisplay) return; // skip if page has no menu
+  if (!userDisplay) return;
 
   if (user) {
     userDisplay.innerText = user.replace("@gmail.com", "");
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// ================= SUMMARY =================
+//SUMMARY
 let students = [];
 let studentNameInput;
 let list;
@@ -68,9 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTempSummary();
 });
 
-// ----------------- LOAD TEMP SUMMARY (SESSION STORAGE) -----------------
+//LOAD TEMP SUMMARY (SESSION STORAGE)
 function loadTempSummary() {
-  // USE sessionStorage here to match grading.js
   const temp = JSON.parse(sessionStorage.getItem("tempSummary"));
 
   list.innerHTML = "";
@@ -101,7 +100,7 @@ function loadTempSummary() {
   avg.textContent = (total / temp.grades.length).toFixed(2);
 }
 
-// ----------------- DELETE SUBJECT FROM TEMP -----------------
+//DELETE SUBJECT FROM TEMP
 function deleteTempSubject(index) {
   let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
   if (!temp || !temp.grades) return;
@@ -113,16 +112,16 @@ function deleteTempSubject(index) {
 }
 
 
-// ----------------- SAVE STUDENT NAME -----------------
+//SAVE STUDENT NAME
 function saveStudentName() {
   let temp = JSON.parse(sessionStorage.getItem("tempSummary")) || { name: "", grades: [] };
-  temp.name = studentNameInput.value.trim(); // allow blank
+  temp.name = studentNameInput.value.trim();
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
   alert("Name saved (temp only).");
 }
 
-// ----------------- FINAL SAVE TO LOCALSTORAGE STUDENTS -----------------
+//FINAL SAVE TO LOCALSTORAGE STUDENTS
 function saveToStudents() {
   let temp = JSON.parse(sessionStorage.getItem("tempSummary"));
   if (!temp || !temp.grades || temp.grades.length === 0) {
@@ -134,10 +133,6 @@ function saveToStudents() {
   sessionStorage.setItem("tempSummary", JSON.stringify(temp));
 
   students = JSON.parse(localStorage.getItem("students")) || [];
-
-
-
-
 
 
 
@@ -161,7 +156,7 @@ function saveToStudents() {
   loadTempSummary();
 }
 
-// ----------------- ADD SUBJECT (BACK TO GRADING) -----------------
+//ADD SUBJECT (BACK TO GRADING)
 function addSubject() {
   window.location.href = "grading.html";
 }
