@@ -8,7 +8,6 @@
 </head>
 <body>
 
-  <!-- NAVBAR -->
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
 
@@ -30,7 +29,6 @@
     </div>
   </div>
 
-  <!-- SIDE MENU -->
   <div class="side-menu" id="sideMenu">
     <span class="close-btn" onclick="closeMenu()">✖</span>
     <a href="home.html">🏠 Home</a>
@@ -40,11 +38,9 @@
   </div>
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-  <!-- MAIN CONTENT -->
   <div class="main-content">
     <h1>Grading System</h1>
 
-    <!-- SUBJECT -->
     <div class="box">
       <label for="subject">Subject:</label>
 <input list="subjectOptions" id="subject" placeholder="Type or select subject..." autocomplete="off">
@@ -59,15 +55,12 @@
       
     </div>
 
-    <!-- WEIGHTS -->
     <div class="box">
       <h2>1. Set Percentage (Total = 100%)</h2>
       Quiz Percentage (%) <input id="wQuiz" type="number" value="40">
       Exam Percentage (%) <input id="wExam" type="number" value="40">
       Attendance Percentage (%) <input id="wAttend" type="number" value="20">
     </div>
-
-    <!-- SCORES -->
     <div class="box">
       <h2>2. Enter Scores</h2>
       <div class="score-group">
@@ -88,7 +81,6 @@
       </div>
     </div>
 
-    <!-- CALCULATE -->
 <button id="calculateBtn" onclick="calculate()">Calculate</button>
     <h2 id="final-grade" class="final-grade">Final Grade: <span id="final">0.00</span>%</h2>
 <button id="viewSubjectsBtn" onclick="location.href='summary.html'">View All Subjects</button>
@@ -96,7 +88,6 @@
 
   </div>
 
-  <!-- JS -->
   <script type="module" src="Js/grading.js"></script>
 </body>
 </html>
