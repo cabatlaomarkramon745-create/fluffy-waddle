@@ -6,7 +6,7 @@ body {
   background: #f4f4f4;
 }
 
-/* navbar */
+
 .navbar {
   position: sticky;
   top: 0; 
@@ -23,10 +23,9 @@ body {
   cursor: pointer;
 }
 
-/* Seach bar */
 .search-wrapper {
-  margin-left: 15px;   /* move beside menu */
-  width: 300px;          /* width */
+  margin-left: 15px;   
+  width: 300px;          
 }
 
 .search-bar {
@@ -109,7 +108,7 @@ body {
   display: none;
 }
 
-/* Side menu */
+
 .side-menu {
   position: fixed;
   top: 0;
@@ -137,7 +136,6 @@ body {
   cursor: pointer;
 }
 
-/* overlay */
 .overlay {
   display: none;
   position: fixed;
@@ -147,12 +145,10 @@ body {
   z-index: 1000;
 }
 
-/* Main */
 .main-content {
   padding: 30px;
 }
 
-/* Boxes inside main*/
 .main-content .box {
   background: #fff;
   padding: 15px;
@@ -164,7 +160,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Inputs inside main */
 .main-content input {
   width: 100%;
   padding: 12px;
@@ -175,7 +170,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Buttons inside */
 .main-content button {
   width: 100%;
   padding: 12px;
@@ -188,7 +182,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Score */
 .main-content .score-group {
   margin-top: 20px;
   padding: 15px;
@@ -297,10 +290,10 @@ body {
 /* Buttons for Calculate & View Subjects */
 #calculateBtn,
 #viewSubjectsBtn {
-  width: 100%;             /* full width like Edit Quizzes */
-  max-width: 500px;        /* same as score-group box */
-  margin: 10px auto;       /* center horizontally */
-  display: block;           /* needed for margin auto to work */
+  width: 100%;             
+  max-width: 500px;        
+  margin: 10px auto;       
+  display: block;          
   padding: 12px;
   font-size: 16px;
   border: 2px solid #000;
