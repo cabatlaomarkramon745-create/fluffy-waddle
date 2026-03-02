@@ -1,20 +1,20 @@
-// ===== LOAD QUIZZES =====
+//LOAD QUIZZES
 export function loadQuizzes() {
   const quizList = document.getElementById("quizList");
   quizList.innerHTML = "";
 
-  // Load from sessionStorage if available
+  // BACKUP STORAGE
   const savedTotals = JSON.parse(sessionStorage.getItem("quizTotals")) || null;
 
 
 
   if (savedTotals) {
-    // Create a single quiz for display purposes if totals exist
+    //TOTAL QUIZ
     addQuiz(savedTotals.totalScore, savedTotals.totalMax);
   }
 }
 
-// ===== ADD QUIZ =====
+//ADD QUIZ
 export function addQuiz(score = 0, max = 20) {
   const quizList = document.getElementById("quizList");
 
@@ -39,7 +39,7 @@ export function addQuiz(score = 0, max = 20) {
   quizList.appendChild(div);
 }
 
-// ===== RENUMBER QUIZZES =====
+//RENUMBER QUIZZES
 function renumberQuizzes() {
   const items = document.getElementById("quizList").children;
   Array.from(items).forEach((el, i) => {
@@ -47,7 +47,7 @@ function renumberQuizzes() {
   });
 }
 
-// ===== SAVE TOTALS ONLY =====
+//SAVE TOTALS ONLY
 export function saveQuizzes() {
   const quizList = document.getElementById("quizList");
   if (!quizList.children.length) return alert("Add at least one quiz!");
@@ -64,7 +64,7 @@ export function saveQuizzes() {
   const totalMax = quizzes.reduce((sum, q) => sum + q.max, 0);
 
 
-  // Store only totals in sessionStorage for grading page
+  //LOCAL STORAGE TO GRADING HTML
   sessionStorage.setItem("quizTotals", JSON.stringify({
     totalScore,
     totalMax
@@ -72,15 +72,15 @@ export function saveQuizzes() {
 
 
   alert("Total score saved!");
-  location.href = "grading.html"; // Redirect to grading page
+  location.href = "grading.html";
 }
 
-// ===== AUTO LOAD ON PAGE LOAD =====
+// AUTO LOAD ON PAGE LOAD
 window.addEventListener("DOMContentLoaded", () => {
   loadQuizzes();
 });
 
-// ===== EXPORT FUNCTIONS FOR HTML BUTTONS =====
+//EXPORT FUNCTIONS FOR HTML BUTTONS
 window.addQuiz = addQuiz;
 window.saveQuizzes = saveQuizzes;
 window.loadQuizzes = loadQuizzes;
