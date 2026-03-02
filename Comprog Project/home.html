@@ -8,16 +8,13 @@
 </head>
 <body>
 
-  <!-- NAVBAR -->
   <div class="navbar">
     <span class="menu-icon" onclick="openMenu()">☰</span>
 
-    <!-- SEARCH BAR -->
     <div class="search-wrapper">
       <input type="text" class="search-bar" placeholder="Search students...">
     </div>
 
-    <!-- PROFILE AREA -->
     <div class="profile-area">
       <div class="profile-icon" onclick="toggleProfile(event)">
         <img src="images/profile-icon.png" 
@@ -33,7 +30,6 @@
     </div>
   </div>
 
-  <!-- SIDE MENU -->
   <div class="side-menu" id="sideMenu">
     <span class="close-btn" onclick="closeMenu()">✖</span>
     <a href="home.html">🏠 Home</a>
@@ -42,11 +38,9 @@
   </div>
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-  <!-- MAIN CONTENT -->
   <div class="main-content">
     <h1 style="text-align: center;">Welcome, <span id="userNameDisplay">Guest</span></h1>
 
-    <!-- STUDENT STATS -->
     <div class="stats">
       <div class="stat-box">👨‍🎓
         Students Graded<br>
@@ -66,7 +60,6 @@
     </div>
   </div>
 
-  <!-- HOME JS -->
   <script type="module" src="Js/home.js"></script>
 </body>
 </html>
