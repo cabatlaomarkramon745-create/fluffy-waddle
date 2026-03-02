@@ -6,7 +6,7 @@ body {
   background: #f4f4f4;
 }
 
-/* nav */
+
 .navbar {
   position: sticky;
   top: 0; 
@@ -26,7 +26,6 @@ body {
   cursor: pointer;
 }
 
-/* search bar */
 .search-wrapper {
   position: relative;
   margin-left: 15px;     
@@ -68,7 +67,6 @@ body {
   object-fit: cover;
 }
 
-/* dropdown */
 .profile-dropdown {
   display: none;
   position: absolute;
@@ -104,7 +102,6 @@ body {
   display: none;
 }
 
-/* side lmenu */
 .side-menu {
   position: fixed;
   top: 0;
@@ -132,7 +129,6 @@ body {
   cursor: pointer;
 }
 
-/* overlay */
 .overlay {
   display: none;
   position: fixed;
@@ -142,7 +138,6 @@ body {
   z-index: 1000;
 }
 
-/* main */
 .container {
   max-width: 500px;
   width: 100%;
@@ -153,16 +148,14 @@ body {
   box-shadow: 0 6px 20px rgba(0,0,0,0.15)
 }
 
-/* cards */
 .student-card {
   background: #ffffff;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
 }
 
-/* section */
 .section-title {
   font-size: 20px;
   font-weight: bold;
@@ -171,7 +164,6 @@ body {
   padding-left: 5px;
 }
 
-/* LIST */
 .subject-list {
   background: #fafafa;
   border-radius: 10px;
@@ -188,7 +180,6 @@ body {
   border-bottom: none;
 }
 
-/* input */
 input {
   width: 100%;
   padding: 12px;
@@ -198,7 +189,6 @@ input {
   margin-top: 10px;
 }
 
-/* button */
 button {
   width: 100%;
   padding: 12px;
@@ -216,7 +206,6 @@ button:hover {
   color: #fff;
 }
 
-/* multi button */
 .button-container {
   display: flex;
   gap: 10px;
@@ -226,7 +215,6 @@ button:hover {
   flex: 1;
 }
 
-/* laptop */
 @media (min-width: 768px) {
   .container {
     max-width: 500px;
