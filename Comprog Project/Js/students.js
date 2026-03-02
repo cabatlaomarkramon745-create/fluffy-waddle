@@ -1,8 +1,8 @@
-// ================= FIREBASE =================
+//FIREBASE STORAGE
 import { auth, db } from "./firebase.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ================= MENU + PROFILE =================
+//MENU + PROFILE
 const sideMenu = document.getElementById("sideMenu");
 const overlay = document.getElementById("overlay");
 const profileDropdown = document.getElementById("profileDropdown");
@@ -41,7 +41,7 @@ function logout() {
   if (auth.currentUser) {
     auth.signOut()
       .then(() => {
-        // Clear localStorage so next user doesn't see previous account's data
+        // CLEAR LOCAL STORAGE
         localStorage.removeItem("loggedInUser");
         localStorage.removeItem("students");
         localStorage.removeItem("studentsSynced");
@@ -56,31 +56,14 @@ function logout() {
   }
 }
 
-// ================= STUDENTS =================
+//STUDENTS
 let students = [];
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ----------------- AUTH + LOAD -----------------
+//AUTH + LOAD
 auth.onAuthStateChanged(async (user) => {
   if (user) {
 
@@ -92,11 +75,11 @@ auth.onAuthStateChanged(async (user) => {
     if (registerBtn) registerBtn.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "block";
 
-    // Merge summary localStorage into Firebase for this user
+    //LOCAL TO CLOUD
     setTimeout(() => uploadSummaryLocalToFirebase(user.uid), 200);
 
   } else {
-    // Offline / localStorage fallback
+    //LOCAL BACKUP
     const localUser = localStorage.getItem("loggedInUser");
     if (localUser) {
       userDisplay.innerText = localUser.replace("@gmail.com", "");
@@ -116,7 +99,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// ----------------- UPLOAD SUMMARY LOCAL TO FIREBASE (FIXED) -----------------
+//UPLOAD SUMMARY LOCAL TO FIREBASE
 async function uploadSummaryLocalToFirebase(uid) {
   try {
     const snapshot = await get(ref(db, `users/${uid}/students`));
@@ -127,7 +110,7 @@ async function uploadSummaryLocalToFirebase(uid) {
     const merged = [...cloudStudents];
 
     localStudents.forEach(local => {
-      // Check if this student already exists in cloud
+      //CHECK IF ITS NEW
       const exists = merged.some(cloud => {
         if (cloud.name !== local.name) return false;
         const cloudSubs = cloud.subjects || [];
@@ -155,13 +138,13 @@ async function uploadSummaryLocalToFirebase(uid) {
   }
 }
 
-// ----------------- LOAD FROM LOCAL -----------------
+//LOAD FROM LOCAL
 function loadStudentsFromLocal() {
   students = JSON.parse(localStorage.getItem("students")) || [];
   renderStudents();
 }
 
-// ----------------- RENDER STUDENTS -----------------
+//RENDER STUDENTS
 function renderStudents() {
   const container = document.getElementById("studentContainer");
   if (!container) return;
@@ -199,7 +182,7 @@ function renderStudents() {
   });
 }
 
-// ----------------- EDIT / DELETE / ADD -----------------
+//EDIT / DELETE / ADD
 function editSubject(studentIndex, subjectIndex) {
   localStorage.setItem("editStudentIndex", studentIndex);
   localStorage.setItem("editSubjectIndex", subjectIndex);
@@ -265,8 +248,7 @@ function addNewStudent() {
   window.location.href = "grading.html";
 }
 
-// ================= EXPORT GLOBAL FUNCTIONS =================
-// make functions callable from HTML buttons
+//EXPORT GLOBAL FUNCTIONS
 window.openMenu = openMenu;
 window.closeMenu = closeMenu;
 window.toggleProfile = toggleProfile;
