@@ -8,7 +8,6 @@ body {
   margin: 0;
 }
 
-/* Login box */
 .login-container {
   background-color: white;
   padding: 20px;
@@ -30,7 +29,6 @@ label {
   font-weight: bold;
 }
 
-/* Inputs */
 input[type="text"],
 input[type="email"],
 input[type="password"] {
@@ -43,20 +41,17 @@ input[type="password"] {
   font-size: 15px;
 }
 
-/* When clicking input */
 input:focus {
   outline: none;
   border-color: black;
 }
 
-/* Fix Chrome autofill making input weird */
 input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 1000px white inset !important;
   box-shadow: 0 0 0 1000px white inset !important;
   -webkit-text-fill-color: black !important;
 }
 
-/* Buttons */
 button {
   width: 100%;
   padding: 12px;
@@ -78,7 +73,6 @@ button:hover {
   text-align: center;
 }
 
-/* laptop */
 @media (min-width: 768px) {
   .login-container {
     max-width: 500px;
@@ -89,7 +83,6 @@ button:hover {
   text-align: center;
 }
 
-/* Show Password Container */
 .show-password {
   display: flex;
   align-items: center;
@@ -99,14 +92,12 @@ button:hover {
   cursor: pointer;
 }
 
-/* Checkbox style */
 .show-password input[type="checkbox"] {
   width: 16px;
   height: 16px;
   cursor: pointer;
 }
 
-/* improve spacing for inputs */
 input[type="email"],
 input[type="password"] {
   width: 100%;
