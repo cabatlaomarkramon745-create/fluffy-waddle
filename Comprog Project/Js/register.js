@@ -78,7 +78,7 @@ if (registerBtn) {
         }
     });
 }
-
+//MESSAGE
 function handleError(error) {
     let msg = error.message;
     if (error.code === "auth/email-already-in-use") msg = "Email is already registered.";
